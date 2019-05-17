@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fanatics/graphql-ast-helpers/creates"
+	"github.com/Fanatics/graphql-ast-helpers/creates"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/printer"
 	"github.com/graphql-go/graphql/language/kinds"

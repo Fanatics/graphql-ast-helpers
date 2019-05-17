@@ -1,4 +1,4 @@
-module github.com/fanatics/graphql-ast-helpers
+module github.com/Fanatics/graphql-ast-helpers
 
 go 1.12
 
