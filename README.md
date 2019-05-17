@@ -5,17 +5,17 @@ Convenience functions for the [`github.com/graphql-go/graphql/language/ast`](htt
 
 ## Contents
 
-### [**Bagger**](./bagger/bagger.go)
+### [**Bagger**](https://godoc.org/github.com/Fanatics/graphql-ast-helpers/bagger)
 `Bagger` helps store a collection of known types so you can prevent duplication.
 
-### [**Creator**](./creates/creates.go)
+### [**Creator**](https://godoc.org/github.com/Fanatics/graphql-ast-helpers/creates)
 Lots of shorthand functions for creating correct `ast` types.
 
-### [**Directives**](./directives/directives.go)
+### [**Directives**](https://godoc.org/github.com/Fanatics/graphql-ast-helpers/directives)
 Helpers for accessing directive properties.
 
-### [**Mergers**](./mergers/mergers.go)
+### [**Mergers**](https://godoc.org/github.com/Fanatics/graphql-ast-helpers/mergers)
 Sane deep merging of types.
 
-### [**Sorters**](./sorters/sorters.go)
+### [**Sorters**](https://godoc.org/github.com/Fanatics/graphql-ast-helpers/sorters)
 Sorting of various `ast` collections (useful in conjuction with `Bagger`).
