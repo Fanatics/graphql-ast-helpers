@@ -639,7 +639,15 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 
 	switch nodes := raw.(type) {
 	case []*ast.ScalarDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.ScalarDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -658,13 +666,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.Scalar(name)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.ScalarDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.EnumDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.EnumDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -683,13 +695,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.Enum(name, nil)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.EnumDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.EnumValueDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.EnumValueDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -708,13 +724,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.EnumVal(name)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.EnumValueDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.ObjectDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.ObjectDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -733,13 +753,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.Obj(name)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.ObjectDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.InputObjectDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.InputObjectDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -758,13 +782,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.InputObj(name)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.InputObjectDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.UnionDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.UnionDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -783,13 +811,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.Union(name)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.UnionDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.InterfaceDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.InterfaceDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -808,15 +840,19 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.Interface(name)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.InterfaceDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	// // NOTE!! - just use the internal object definition
 	// case []*ast.TypeExtensionDefinition:
 	case []*ast.DirectiveDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.DirectiveDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -829,13 +865,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		}
 		curr := creates.DirectiveDef(name)
 		curr.Description = mergeDescriptions(descs)
-		vout, ok := out.(*ast.DirectiveDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.FieldDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.FieldDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -854,13 +894,17 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.Field(name, nil)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.FieldDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 	case []*ast.InputValueDefinition:
-		if len(nodes) == 0 {
+		vout, ok := out.(*ast.InputValueDefinition)
+		if !ok {
+			return errs.Newf("cannot put %T into %T", vout, nodes)
+		}
+		switch len(nodes) {
+		case 0:
+			return nil
+		case 1:
+			*vout = *nodes[0]
 			return nil
 		}
 		for _, one := range nodes {
@@ -879,10 +923,6 @@ func mergeNodesBasic(raw interface{}, out ast.Node) error {
 		curr := creates.InputVal(name, nil)
 		curr.Description = mergeDescriptions(descs)
 		curr.Directives = append(curr.Directives, directives...)
-		vout, ok := out.(*ast.InputValueDefinition)
-		if !ok {
-			return errs.Newf("cannot put %T into %T", curr, vout)
-		}
 		*vout = *curr
 
 	default:
