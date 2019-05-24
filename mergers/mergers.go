@@ -1,4 +1,3 @@
-
 package mergers
 
 import (
@@ -7,8 +6,8 @@ import (
 
 	"github.com/Fanatics/graphql-ast-helpers/creates"
 	"github.com/graphql-go/graphql/language/ast"
-	"github.com/graphql-go/graphql/language/printer"
 	"github.com/graphql-go/graphql/language/kinds"
+	"github.com/graphql-go/graphql/language/printer"
 	"github.com/richardwilkes/toolbox/errs"
 )
 
@@ -189,6 +188,21 @@ func MergeExtensions(nodes []*ast.TypeExtensionDefinition) (*ast.TypeExtensionDe
 	ext.Definition = def
 
 	return ext, nil
+}
+
+// MergeFieldsToOne merges all fields to one
+func MergeFieldsToOne(nodes []*ast.FieldDefinition) (*ast.FieldDefinition, error) {
+	many, err := MergeFields(nodes)
+	if err != nil {
+		return nil, errs.Wrap(err)
+	}
+
+	switch numFields := len(many); {
+	case numFields == 1:
+		return many[0], nil
+	default:
+		return nil, errs.Newf("%d competing field definitions: %#v", numFields, nodes)
+	}
 }
 
 // MergeFields is a simple merge
@@ -626,8 +640,6 @@ func MergeValue(target, source ast.Value) (ast.Value, error) {
 
 	return nil, nil
 }
-
-
 
 // -------
 // helpers

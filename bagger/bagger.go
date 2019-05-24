@@ -12,7 +12,7 @@ import (
 type Bagger struct {
 	scalars map[string]*ast.ScalarDefinition
 	enums   map[string]*ast.EnumDefinition
-	types   map[string]*ast.ObjectDefinition
+	objects map[string]*ast.ObjectDefinition
 	inputs  map[string]*ast.InputObjectDefinition
 
 	unions     map[string]*ast.UnionDefinition
@@ -31,7 +31,7 @@ func NewBagger() *Bagger {
 	b := &Bagger{
 		scalars: make(map[string]*ast.ScalarDefinition),
 		enums:   make(map[string]*ast.EnumDefinition),
-		types:   make(map[string]*ast.ObjectDefinition),
+		objects: make(map[string]*ast.ObjectDefinition),
 		inputs:  make(map[string]*ast.InputObjectDefinition),
 
 		unions:     make(map[string]*ast.UnionDefinition),
@@ -76,10 +76,10 @@ func (b *Bagger) AddNode(node ast.Node) error {
 		b.enums[name] = one
 	case *ast.ObjectDefinition:
 		name := one.Name.Value
-		if _, exists := b.types[name]; exists {
+		if _, exists := b.objects[name]; exists {
 			return errs.Newf("type %q already exists", name)
 		}
-		b.types[name] = one
+		b.objects[name] = one
 	case *ast.InputObjectDefinition:
 		name := one.Name.Value
 		if _, exists := b.inputs[name]; exists {
@@ -170,7 +170,7 @@ func (b *Bagger) GetEnums() map[string]*ast.EnumDefinition {
 
 // GetObjects returns the underlying map, which can be directly edited (carefully)
 func (b *Bagger) GetObjects() map[string]*ast.ObjectDefinition {
-	return b.types
+	return b.objects
 }
 
 // GetInputObjects returns the underlying map, which can be directly edited (carefully)
