@@ -46,7 +46,6 @@ func MergeEnums(nodes []*ast.EnumDefinition) (*ast.EnumDefinition, error) {
 	}
 
 	return node, nil
-
 }
 
 // MergeEnumValues is a simple merge
@@ -57,6 +56,29 @@ func MergeEnumValues(nodes []*ast.EnumValueDefinition) (*ast.EnumValueDefinition
 	}
 
 	return node, nil
+}
+
+// MergeInEnumVal is a simple merge
+func MergeInEnumVal(enum *ast.EnumDefinition, vals ...*ast.EnumValueDefinition) error {
+	values := make(map[string][]*ast.EnumValueDefinition)
+	for _, one := range append(enum.Values, vals...) {
+		curr, _ := values[one.Name.Value]
+		values[one.Name.Value] = append(curr, one)
+	}
+
+	var nextValues []*ast.EnumValueDefinition
+
+	for _, group := range values {
+		value, err := MergeEnumValues(group)
+		if err != nil {
+			return errs.Wrap(err)
+		}
+		nextValues = append(nextValues, value)
+	}
+
+	enum.Values = nextValues
+
+	return nil
 }
 
 // MergeObjects is a simple merge
@@ -88,11 +110,15 @@ func MergeObjects(nodes []*ast.ObjectDefinition) (*ast.ObjectDefinition, error) 
 	}
 
 	for _, group := range fields {
-		uniqueFields, err := MergeFields(group)
+		one, err := MergeFieldsToOne(group)
 		if err != nil {
 			return nil, errs.Wrap(err)
 		}
-		node.Fields = append(node.Fields, uniqueFields...)
+		merged, err := MergeFields(append(node.Fields, one))
+		if err != nil {
+			return nil, errs.Wrap(err)
+		}
+		node.Fields = merged
 	}
 
 	return node, nil
@@ -208,6 +234,13 @@ func MergeFieldsToOne(nodes []*ast.FieldDefinition) (*ast.FieldDefinition, error
 
 // MergeFields is a simple merge
 func MergeFields(nodes []*ast.FieldDefinition) ([]*ast.FieldDefinition, error) {
+	switch len(nodes) {
+	case 0:
+		return nil, nil
+	case 1:
+		return nodes, nil
+	}
+
 	all := make(map[string][]*ast.FieldDefinition)
 	for _, one := range nodes {
 		curr, _ := all[one.Name.Value]
@@ -236,8 +269,8 @@ func MergeFields(nodes []*ast.FieldDefinition) ([]*ast.FieldDefinition, error) {
 		args := make(map[string][]*ast.InputValueDefinition)
 		for _, one := range group {
 			for _, arg := range one.Arguments {
-				curr, _ := args[one.Name.Value]
-				args[one.Name.Value] = append(curr, arg)
+				curr, _ := args[arg.Name.Value]
+				args[arg.Name.Value] = append(curr, arg)
 			}
 		}
 		for _, group := range args {
@@ -245,7 +278,11 @@ func MergeFields(nodes []*ast.FieldDefinition) ([]*ast.FieldDefinition, error) {
 			if err != nil {
 				return nil, errs.Wrap(err)
 			}
-			node.Arguments = append(node.Arguments, val)
+			merged, err := MergeLikeInputValues(append(node.Arguments, val))
+			if err != nil {
+				return nil, errs.Wrap(err)
+			}
+			node.Arguments = merged
 		}
 
 		out = append(out, node)
@@ -287,6 +324,34 @@ func MergeDirectivesToOne(nodes []*ast.DirectiveDefinition) (*ast.DirectiveDefin
 	}
 
 	return node, nil
+}
+
+// MergeLikeInputValues is a simple merge
+func MergeLikeInputValues(nodes []*ast.InputValueDefinition) ([]*ast.InputValueDefinition, error) {
+	switch len(nodes) {
+	case 0:
+		return nil, nil
+	case 1:
+		return nodes, nil
+	}
+
+	all := make(map[string][]*ast.InputValueDefinition)
+	for _, one := range nodes {
+		curr, _ := all[one.Name.Value]
+		all[one.Name.Value] = append(curr, one)
+	}
+
+	var out []*ast.InputValueDefinition
+
+	for _, group := range all {
+		val, err := MergeInputValues(group)
+		if err != nil {
+			return nil, errs.Wrap(err)
+		}
+		out = append(out, val)
+	}
+
+	return out, nil
 }
 
 // MergeInputValues is a simple merge
