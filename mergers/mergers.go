@@ -223,13 +223,10 @@ func MergeFields(nodes []*ast.FieldDefinition) ([]*ast.FieldDefinition, error) {
 		}
 
 		types := make(map[string]ast.Type)
-		for _, one := range nodes {
+		for _, one := range group {
 			types[fmt.Sprint(printer.Print(one.Type))] = one.Type
 		}
 		if len(types) > 1 {
-			for n, x := range types {
-				fmt.Println(n, x)
-			}
 			return nil, errs.Newf("cannot merge different types, %#v", types)
 		}
 		for _, nodeType := range types {
