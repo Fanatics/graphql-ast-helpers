@@ -234,7 +234,7 @@ func MergeFields(nodes []*ast.FieldDefinition) ([]*ast.FieldDefinition, error) {
 		}
 
 		args := make(map[string][]*ast.InputValueDefinition)
-		for _, one := range nodes {
+		for _, one := range group {
 			for _, arg := range one.Arguments {
 				curr, _ := args[one.Name.Value]
 				args[one.Name.Value] = append(curr, arg)
@@ -299,7 +299,8 @@ func MergeInputValues(nodes []*ast.InputValueDefinition) (*ast.InputValueDefinit
 	var typeNames []string
 	var defaultValues []ast.Value
 	for _, one := range nodes {
-		typeNames = append(typeNames, one.Type.String())
+		typeName := fmt.Sprint(printer.Print(one.Type))
+		typeNames = append(typeNames, typeName)
 		defaultValues = append(defaultValues, one.DefaultValue)
 	}
 
