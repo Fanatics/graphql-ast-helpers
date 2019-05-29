@@ -77,6 +77,25 @@ func GetDirectiveArg(node ast.Node, dirName, argName string) ast.Value {
 	return nil
 }
 
+// GetDirectiveArgEnum returns `false` if directive or argument was not found,
+// or returns an `error` if it was found but it was not a string
+func GetDirectiveArgEnum(node ast.Node, dirName, argName string) (string, bool, error) {
+	val := GetDirectiveArg(node, dirName, argName)
+	if val == nil {
+		return "", false, nil
+	}
+
+	enumVal, ok := val.(*ast.EnumValue)
+	if !ok {
+		return "", false, errs.Newf("@%s(%s: ...) not a string, is %T", dirName, argName, val)
+	}
+	if enumVal == nil {
+		return "", false, errs.Newf("@%s(%s: ...) was a string, but is nil", dirName, argName)
+	}
+
+	return enumVal.Value, true, nil
+}
+
 // GetDirectiveArgStr returns `false` if directive or argument was not found,
 // or returns an `error` if it was found but it was not a string
 func GetDirectiveArgStr(node ast.Node, dirName, argName string) (string, bool, error) {
