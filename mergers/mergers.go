@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Fanatics/graphql-ast-helpers/creates"
+	"github.com/Fanatics/graphql-ast-helpers/directives"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/printer"
@@ -555,6 +556,19 @@ func MergeDirective(directives []*ast.Directive, dir *ast.Directive) ([]*ast.Dir
 	}
 
 	return directives, nil
+}
+
+// MergeInDirectives merges in additional directives
+func MergeInDirectives(node src.Node, dirs ...*ast.Directive) error {
+	curr := directives.GetDirectives(node)
+
+	next, err := MergeLikeDirectives(append(curr, dirs...))
+	if err != nil {
+		return errs.Wrap(err)
+	}
+
+	directives.SetDirectives(node, next)
+	return nil
 }
 
 // MergeValue tries to merge a value, like-typed values will merge if it makes sense,
