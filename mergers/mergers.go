@@ -559,7 +559,7 @@ func MergeDirective(directives []*ast.Directive, dir *ast.Directive) ([]*ast.Dir
 }
 
 // MergeInDirectives merges in additional directives
-func MergeInDirectives(node src.Node, dirs ...*ast.Directive) error {
+func MergeInDirectives(node ast.Node, dirs ...*ast.Directive) error {
 	curr := directives.GetDirectives(node)
 
 	next, err := MergeLikeDirectives(append(curr, dirs...))
