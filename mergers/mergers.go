@@ -103,11 +103,11 @@ func MergeObjects(nodes []*ast.ObjectDefinition) (*ast.ObjectDefinition, error) 
 		}
 	}
 
+	var nextInterfaces []*ast.Named
 	for _, one := range uniqueStrings(interfaces) {
-		node.Interfaces = append(node.Interfaces,
-			creates.NamedType(one),
-		)
+		nextInterfaces = append(nextInterfaces, creates.NamedType(one))
 	}
+	node.Interfaces = nextInterfaces
 
 	for _, group := range fields {
 		one, err := MergeFieldsToOne(group)
