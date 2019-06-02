@@ -41,7 +41,7 @@ var genKinds = map[string]reflect.Type{
 	kinds.EnumValue:    reflect.TypeOf(ast.NewEnumValue(nil)),
 	kinds.ObjectValue:  reflect.TypeOf(ast.NewObjectValue(nil)),
 	kinds.ObjectField:  reflect.TypeOf(ast.NewObjectField(nil)),
-	// "Value":            reflect.TypeOf(ast.Value(ast.NewBooleanValue(nil))),
+	"Value":            reflect.TypeOf(new(ast.Value)).Elem(),
 
 	// Directives
 	kinds.Directive: reflect.TypeOf(ast.NewDirective(nil)),
@@ -50,7 +50,7 @@ var genKinds = map[string]reflect.Type{
 	kinds.Named:   reflect.TypeOf(ast.NewNamed(nil)),
 	kinds.List:    reflect.TypeOf(ast.NewList(nil)),
 	kinds.NonNull: reflect.TypeOf(ast.NewNonNull(nil)),
-	// "Type":        reflect.TypeOf(ast.Type(ast.NewNamed(nil))),
+	"Type":        reflect.TypeOf(new(ast.Type)).Elem(),
 
 	// Type System Definitions
 	// kinds.SchemaDefinition:        reflect.TypeOf(ast.NewSchemaDefinition(nil)),
@@ -243,14 +243,21 @@ var getType = func(one genKind) string {
 }
 
 var accessName = func(varname, src string, one genKind) string {
-	if one.Type.Kind() == reflect.Ptr {
-		if one.Type.Implements(reflect.TypeOf(new(ast.Value)).Elem()) {
-			return fmt.Sprintf("%s := m.getValueID(%s)", varname, src)
-		}
-		if one.Type.Implements(reflect.TypeOf(new(ast.Type)).Elem()) {
-			return fmt.Sprintf("%s := fmt.Sprint(printer.Print(%s))", varname, src)
-		}
+	log.Println(one.Type.Name(), one.Type.String())
+	switch one.Type.String() {
+	case "ast.Value", "*ast.EnumValue", "*ast.NonNull", "*ast.List", "*ast.ObjectValue", "*ast.FloatValue", "*ast.IntValue", "*ast.StringValue":
+		return fmt.Sprintf("%s := m.getValueID(%s)", varname, src)
+	case "ast.Type":
+		return fmt.Sprintf("%s := fmt.Sprint(printer.Print(%s))", varname, src)
 	}
+	// if one.Type.Kind() == reflect.Ptr {
+	// 	if one.Type.Implements(reflect.TypeOf(new(ast.Value)).Elem()) {
+	// 		return fmt.Sprintf("%s := m.getValueID(%s)", varname, src)
+	// 	}
+	// 	if one.Type.Implements(reflect.TypeOf(new(ast.Type)).Elem()) {
+	// 		return fmt.Sprintf("%s := fmt.Sprint(printer.Print(%s))", varname, src)
+	// 	}
+	// }
 
 	if name := propName(one, src); name != "" {
 		return fmt.Sprintf("%s := fmt.Sprint(printer.Print(%s))", varname, name)

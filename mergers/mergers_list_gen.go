@@ -20,7 +20,7 @@ func (m *Merger) SimilarList(curr []*ast.List, more ...*ast.List) ([]*ast.List, 
 
 	groups := make(map[string][]*ast.List)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one))
+		name := m.getValueID(one)
 		if name != "" {
 			curr, _ := groups[name]
 			groups[name] = append(curr, one)

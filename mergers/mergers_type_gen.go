@@ -11,27 +11,27 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarObjectField merges declarations of ObjectField that share the same ObjectField value.
-func (m *Merger) SimilarObjectField(curr []*ast.ObjectField, more ...*ast.ObjectField) ([]*ast.ObjectField, error) {
+// SimilarType merges declarations of Type that share the same Type value.
+func (m *Merger) SimilarType(curr []ast.Type, more ...ast.Type) ([]ast.Type, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.ObjectField)
+	groups := make(map[string][]ast.Type)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one.Name))
+		name := fmt.Sprint(printer.Print(one))
 		if name != "" {
 			curr, _ := groups[name]
 			groups[name] = append(curr, one)
 		}
 	}
 
-	var out []*ast.ObjectField
+	var out []ast.Type
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneObjectField(group); err != nil {
+		if merged, err := m.OneType(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -41,9 +41,9 @@ func (m *Merger) SimilarObjectField(curr []*ast.ObjectField, more ...*ast.Object
 	return out, errSet
 }
 
-// OneObjectField attempts to merge all members of ObjectField into a singe *ast.ObjectField.
+// OneType attempts to merge all members of Type into a singe ast.Type.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneObjectField(curr []*ast.ObjectField, more ...*ast.ObjectField) (*ast.ObjectField, error) {
+func (m *Merger) OneType(curr []ast.Type, more ...ast.Type) (ast.Type, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -53,30 +53,16 @@ func (m *Merger) OneObjectField(curr []*ast.ObjectField, more ...*ast.ObjectFiel
 	}
 
 	// step 2 - prepare property collections (if any)
-  var listName []*ast.Name
-  var listValue []ast.Value
+
 
 	// step 3 - range over the parent struct and collect properties
-	for _, one := range all {
-    listName = append(listName, one.Name)
-    listValue = append(listValue, one.Value)
-	}
 
 	// step 4 - prepare output types
-	one := ast.NewObjectField(nil)
+	one := ast.NewType(nil)
 	var errSet error
 
 	// step 5 - merge properties
-  if merged, err := m.OneName(listName); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Name = merged
-	}
-  if merged, err := m.OneValue(listValue); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Value = merged
-	}
+
 
 	return one, errSet
 }

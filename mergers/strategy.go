@@ -28,6 +28,31 @@ func NewMerger(opts ...func(*Merger) error) (*Merger, error) {
 	return m, nil
 }
 
+// Onestring merges strings
+func (m *Merger) Onestring(curr []string, more ...string) (string, error) {
+	all := append(curr, more...)
+	if n := len(all); n == 0 {
+		return "", nil
+	} else if n == 1 {
+		return all[0], nil
+	}
+
+	group := make(map[string]struct{})
+	for _, one := range all {
+		group[one] = struct{}{}
+	}
+
+	if len(group) > 1 {
+		return "", errs.Newf("multiple different strings %#v", group)
+	}
+
+	var out string
+	for str := range group {
+		out = str
+	}
+	return out, nil
+}
+
 // // IsSameValue detects if two values are the same
 // func (m *Merger) IsSameValue(rawLeft, rawRight ast.Value) (bool, error) {
 // 	switch left := rawLeft.(type) {
