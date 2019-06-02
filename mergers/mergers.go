@@ -1046,6 +1046,10 @@ func mergeDescriptions(descs []*ast.StringValue) *ast.StringValue {
 		}
 	}
 
+	if len(strs) == 0 {
+		return nil
+	}
+
 	total := strings.Join(uniqueStrings(strs), "\n\n")
 
 	return creates.ValueString(total)
