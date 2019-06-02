@@ -3,6 +3,7 @@ package mergers
 
 import (
 	"fmt"
+
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/printer"
 	"github.com/richardwilkes/toolbox/errs"
@@ -53,13 +54,11 @@ func (m *Merger) OneNonNull(curr []*ast.NonNull, more ...*ast.NonNull) (*ast.Non
 	}
 
 	// step 2 - prepare property collections (if any)
+	var listType []ast.Type
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
+		listType = append(listType, one.Type)
 	}
 
 	// step 4 - prepare output types
@@ -67,6 +66,11 @@ func (m *Merger) OneNonNull(curr []*ast.NonNull, more ...*ast.NonNull) (*ast.Non
 	var errSet error
 
 	// step 5 - merge properties
+	if merged, err := m.OneType(listType); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Type = merged
+	}
 
 	return one, errSet
 }

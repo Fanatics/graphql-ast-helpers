@@ -53,15 +53,11 @@ func (m *Merger) OneNamed(curr []*ast.Named, more ...*ast.Named) (*ast.Named, er
 	}
 
 	// step 2 - prepare property collections (if any)
-	var names []*ast.Name
+  var listName []*ast.Name
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
-		names = append(names, one.Name)
+    listName = append(listName, one.Name)
 	}
 
 	// step 4 - prepare output types
@@ -69,10 +65,10 @@ func (m *Merger) OneNamed(curr []*ast.Named, more ...*ast.Named) (*ast.Named, er
 	var errSet error
 
 	// step 5 - merge properties
-	if single, err := m.OneName(names); err != nil {
+  if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Name = single
+		one.Name = merged
 	}
 
 	return one, errSet

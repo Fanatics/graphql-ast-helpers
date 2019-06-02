@@ -53,21 +53,19 @@ func (m *Merger) OneObjectDefinition(curr []*ast.ObjectDefinition, more ...*ast.
 	}
 
 	// step 2 - prepare property collections (if any)
-	var names []*ast.Name
-	var descriptions []*ast.StringValue
-	var directives []*ast.Directive
-	var interfaces []*ast.Named
+  var listName []*ast.Name
+  var listDescription []*ast.StringValue
+  var listInterfaces []*ast.Named
+  var listDirectives []*ast.Directive
+  var listFields []*ast.FieldDefinition
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
-		names = append(names, one.Name)
-		descriptions = append(descriptions, one.Description)
-		directives = append(directives, one.Directives...)
-		interfaces = append(interfaces, one.Interfaces...)
+    listName = append(listName, one.Name)
+    listDescription = append(listDescription, one.Description)
+    listInterfaces = append(listInterfaces, one.Interfaces...)
+    listDirectives = append(listDirectives, one.Directives...)
+    listFields = append(listFields, one.Fields...)
 	}
 
 	// step 4 - prepare output types
@@ -75,25 +73,30 @@ func (m *Merger) OneObjectDefinition(curr []*ast.ObjectDefinition, more ...*ast.
 	var errSet error
 
 	// step 5 - merge properties
-	if single, err := m.OneName(names); err != nil {
+  if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Name = single
+		one.Name = merged
 	}
-	if single, err := m.OneStringValue(descriptions); err != nil {
+  if merged, err := m.OneStringValue(listDescription); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Description = single
+		one.Description = merged
 	}
-	if many, err := m.SimilarDirective(directives); err != nil {
+  if merged, err := m.SimilarNamed(listInterfaces); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Directives = many
+		one.Interfaces = merged
 	}
-	if many, err := m.SimilarNamed(interfaces); err != nil {
+  if merged, err := m.SimilarDirective(listDirectives); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Interfaces = many
+		one.Directives = merged
+	}
+  if merged, err := m.SimilarFieldDefinition(listFields); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Fields = merged
 	}
 
 	return one, errSet

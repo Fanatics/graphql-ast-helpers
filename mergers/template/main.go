@@ -41,7 +41,7 @@ var genKinds = map[string]reflect.Type{
 	kinds.EnumValue:    reflect.TypeOf(ast.NewEnumValue(nil)),
 	kinds.ObjectValue:  reflect.TypeOf(ast.NewObjectValue(nil)),
 	kinds.ObjectField:  reflect.TypeOf(ast.NewObjectField(nil)),
-	"Value":            reflect.TypeOf(ast.Value(ast.NewBooleanValue(nil))),
+	// "Value":            reflect.TypeOf(ast.Value(ast.NewBooleanValue(nil))),
 
 	// Directives
 	kinds.Directive: reflect.TypeOf(ast.NewDirective(nil)),
@@ -50,7 +50,7 @@ var genKinds = map[string]reflect.Type{
 	kinds.Named:   reflect.TypeOf(ast.NewNamed(nil)),
 	kinds.List:    reflect.TypeOf(ast.NewList(nil)),
 	kinds.NonNull: reflect.TypeOf(ast.NewNonNull(nil)),
-	"Type":        reflect.TypeOf(ast.Type(ast.NewNamed(nil))),
+	// "Type":        reflect.TypeOf(ast.Type(ast.NewNamed(nil))),
 
 	// Type System Definitions
 	// kinds.SchemaDefinition:        reflect.TypeOf(ast.NewSchemaDefinition(nil)),
@@ -108,13 +108,13 @@ type genKind struct {
 	Type reflect.Type
 }
 
-func (g genKind) isStructy() bool {
+func (g genKind) IsStructy() bool {
 	t := g.Type
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 
-	return t.Type == reflect.Struct 
+	return t.Kind() == reflect.Struct 
 }
 
 func (g genKind) eachField(fn func(reflect.StructField)) error {
@@ -122,8 +122,16 @@ func (g genKind) eachField(fn func(reflect.StructField)) error {
 		return errs.Newf("can't each-field a struct")
 	}
 
-	for i := 0; i < t.NumField(); i++ {
-		fn(t.Field(i))
+	elem := g.Type.Elem()
+
+	for i := 0; i < elem.NumField(); i++ {
+		field := elem.Field(i)
+		switch field.Name {
+		case "Kind", "Loc":
+			continue
+		default:
+			fn(elem.Field(i))
+		}
 	}
 
 	return nil
@@ -131,11 +139,11 @@ func (g genKind) eachField(fn func(reflect.StructField)) error {
 
 func isMulti(sf reflect.StructField) bool {
 	sk := sf.Type.Kind()
-	return sf != reflect.Slice && sf != reflect.Array
+	return sk == reflect.Slice || sk == reflect.Array
 }
 
 func typeAsMulti(sf reflect.StructField) reflect.Type {
-	if isMulti(sf) {
+	if !isMulti(sf) {
 		return reflect.SliceOf(sf.Type)
 	}
 	return sf.Type
@@ -158,7 +166,7 @@ var propsSlices = func(one genKind) (string, error) {
 		ft := typeAsMulti(field)
 
 		decls = append(decls,
-			fmt.Sprintf("  var list%s %s", field.Name(), ft.Kind()),
+			fmt.Sprintf("  var list%s %s", field.Name, ft),
 		)
 	})
 
@@ -171,10 +179,10 @@ var propsAppenders = func(one genKind) (string, error) {
 	one.eachField(func(field reflect.StructField) {
 		suffix := ""
 		if isMulti(field) {
-			sufix = "..."
+			suffix = "..."
 		}
 
-		fname := field.Name()
+		fname := field.Name
 		appenders = append(appenders,
 			fmt.Sprintf("    list%s = append(list%s, one.%s%s)", fname, fname, fname, suffix),
 		)
@@ -184,43 +192,42 @@ var propsAppenders = func(one genKind) (string, error) {
 }
 
 var tmplMerge = template.Must(template.New("").Parse(`
-	if merged, err := m.{{ .Fn }}(list{{ .Fname }}); err != nil {
+	{{- /*etc */}}  if merged, err := m.{{ .Fn }}(list{{ .Fname }}); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.{{ .Fname }} = merged
-	}
-`))
+	}`))
 
 var propsMerge = func(one genKind) (string, error) {
 	var appenders []string
+	var errSet error
 
 	one.eachField(func(field reflect.StructField) {
 		out := &strings.Builder{}
 
-		pcs := strings.Split(field.Type().String(), ".")
+		pcs := strings.Split(field.Type.String(), ".")
 
 		fn := pcs[len(pcs) - 1]
 		if isMulti(field) {
-			fn = "One" + fn
-		} else {
 			fn = "Similar" + fn
+		} else {
+			fn = "One" + fn
 		}
 
 		if err := tmplMerge.Execute(out, struct{
 			Fn string
 			Fname string
 		}{
-			Fn: field.Type,
-			Fname field.Name(),
-
+			Fn: fn,
+			Fname: field.Name,
 		}); err != nil {
-			return "", errs.Wrap(err)
+			errSet = errs.Append(errSet, err)
 		}
 
 		appenders = append(appenders, out.String())
 	})
 
-	return strings.Join(appenders, "\n"), nil
+	return strings.Join(appenders, "\n"), errSet
 }
 
 var getConstructor = func(one genKind) (string, error) {
@@ -232,15 +239,15 @@ var getConstructor = func(one genKind) (string, error) {
 }
 
 var getType = func(one genKind) string {
-	return one.Value.Type().String()
+	return one.Type.String()
 }
 
 var accessName = func(varname, src string, one genKind) string {
-	if one.Value.CanInterface() {
-		switch one.Value.Interface().(type) {
-		case ast.Value:
+	if one.Type.Kind() == reflect.Ptr {
+		if one.Type.Implements(reflect.TypeOf(new(ast.Value)).Elem()) {
 			return fmt.Sprintf("%s := m.getValueID(%s)", varname, src)
-		case ast.Type:
+		}
+		if one.Type.Implements(reflect.TypeOf(new(ast.Type)).Elem()) {
 			return fmt.Sprintf("%s := fmt.Sprint(printer.Print(%s))", varname, src)
 		}
 	}
@@ -260,10 +267,10 @@ var accessName = func(varname, src string, one genKind) string {
 	return ""
 }
 
-// var constructKind = func(one genKind) string {
-// }
+// // var constructKind = func(one genKind) string {
+// // }
 
-// property accessors
+// // property accessors
 
 var propName = func(one genKind, varname string) string {
 	switch one.Kind {
@@ -273,60 +280,58 @@ var propName = func(one genKind, varname string) string {
 		return fmt.Sprintf("%s.Definition.Name", varname)
 	}
 
-	if hasFieldKind(one.Value, genKinds[kinds.Name].Type(), "Name") {
+	if hasFieldKind(one.Type, genKinds[kinds.Name], "Name") {
 		return fmt.Sprintf("%s.Name", varname)
 	}
 
 	return ""
 }
 
-var propDescription = func(one genKind, varname string) string {
-	switch one.Kind {
-	case kinds.TypeExtensionDefinition:
-		return fmt.Sprintf("%s.Definition.Description", varname)
-	}
+// var propDescription = func(one genKind, varname string) string {
+// 	switch one.Kind {
+// 	case kinds.TypeExtensionDefinition:
+// 		return fmt.Sprintf("%s.Definition.Description", varname)
+// 	}
 
-	if hasFieldKind(one.Value, genKinds[kinds.StringValue].Type(), "Description") {
-		return fmt.Sprintf("%s.Description", varname)
-	}
+// 	if hasFieldKind(one.Value, genKinds[kinds.StringValue].Type(), "Description") {
+// 		return fmt.Sprintf("%s.Description", varname)
+// 	}
 
-	return ""
-}
+// 	return ""
+// }
 
-var sliceDirectives = reflect.SliceOf(genKinds[kinds.Directive].Type())
+// var sliceDirectives = reflect.SliceOf(genKinds[kinds.Directive].Type())
 
-var propDirective = func(one genKind, varname string) string {
-	switch one.Kind {
-	case kinds.TypeExtensionDefinition:
-		return fmt.Sprintf("%s.Definition.Directives", varname)
-	}
+// var propDirective = func(one genKind, varname string) string {
+// 	switch one.Kind {
+// 	case kinds.TypeExtensionDefinition:
+// 		return fmt.Sprintf("%s.Definition.Directives", varname)
+// 	}
 
-	if hasFieldKind(one.Value, sliceDirectives, "Directives") {
-		return fmt.Sprintf("%s.Directives", varname)
-	}
+// 	if hasFieldKind(one.Value, sliceDirectives, "Directives") {
+// 		return fmt.Sprintf("%s.Directives", varname)
+// 	}
 
-	return ""
-}
+// 	return ""
+// }
 
-var propInterface = func(one genKind, varname string) string {
-	switch one.Kind {
-	case kinds.ObjectDefinition:
-		return fmt.Sprintf("%s.Interfaces", varname)
-	case kinds.TypeExtensionDefinition:
-		return fmt.Sprintf("%s.Definition.Interfaces", varname)
-	}
-	return ""
-}
+// var propInterface = func(one genKind, varname string) string {
+// 	switch one.Kind {
+// 	case kinds.ObjectDefinition:
+// 		return fmt.Sprintf("%s.Interfaces", varname)
+// 	case kinds.TypeExtensionDefinition:
+// 		return fmt.Sprintf("%s.Definition.Interfaces", varname)
+// 	}
+// 	return ""
+// }
 
 // -------
 // helpers
 
-func hasFieldKind(parent reflect.Value, child reflect.Type, name string) bool {
+func hasFieldKind(parent, child reflect.Type, name string) bool {
 	if parent.Kind() == reflect.Ptr {
-		if field := parent.Elem().FieldByName(name); field.IsValid() {
-			if reflect.DeepEqual(field.Type(), child) {
-				return true
-			}
+		if field, found := parent.Elem().FieldByName(name); found {
+			return field.Type == child
 		}
 	}
 	return false
@@ -397,81 +402,22 @@ func (m *Merger) One{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ({{ $ty
 	}
 
 	// step 2 - prepare property collections (if any)
-	{{ propsSlices . }}
-	{{- $propName := propName . "one" }}
-	{{- $propDescription := propDescription . "one" }}
-	{{- $propDirective := propDirective . "one" }}
-	{{- $propInterface := propInterface . "one" }}
-
-	{{- if $propName }}
-	var names []*ast.Name
-	{{- end }}
-	{{- if $propDescription }}
-	var descriptions []*ast.StringValue
-	{{- end }}
-	{{- if $propDirective }}
-	var directives []*ast.Directive
-	{{- end }}
-	{{- if $propInterface }}
-	var interfaces []*ast.Named
-	{{- end }}
+{{ propsSlices . }}
 
 	// step 3 - range over the parent struct and collect properties
+	{{- $pm := propsAppenders . }}
+	{{- if $pm }}
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
-		{{- if $propName }}
-		names = append(names, {{ $propName }})
-		{{- end }}
-		{{- if $propDescription }}
-		descriptions = append(descriptions, {{ $propDescription }})
-		{{- end }}
-		{{- if $propDirective }}
-		directives = append(directives, {{ $propDirective }}...)
-		{{- end }}
-		{{- if $propInterface }}
-		interfaces = append(interfaces, {{ $propInterface }}...)
-		{{- end }}
+{{ $pm }}
 	}
+	{{- end }}
 
 	// step 4 - prepare output types
 	one := ast.New{{ .Kind }}(nil)
 	var errSet error
 
 	// step 5 - merge properties
-	{{- if $propName }}
-	if single, err := m.OneName(names); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		{{ $propName }} = single
-	}
-	{{- end }}
-
-	{{- if $propDescription }}
-	if single, err := m.OneStringValue(descriptions); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		{{ $propDescription }} = single
-	}
-	{{- end }}
-
-	{{- if $propDirective }}
-	if many, err := m.SimilarDirective(directives); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		{{ $propDirective }} = many
-	}
-	{{- end }}
-
-	{{- if $propInterface }}
-	if many, err := m.SimilarNamed(interfaces); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		{{ $propInterface }} = many
-	}
-	{{- end }}
+{{ propsMerge . }}
 
 	return one, errSet
 }

@@ -53,19 +53,19 @@ func (m *Merger) OneInputValueDefinition(curr []*ast.InputValueDefinition, more 
 	}
 
 	// step 2 - prepare property collections (if any)
-	var names []*ast.Name
-	var descriptions []*ast.StringValue
-	var directives []*ast.Directive
+  var listName []*ast.Name
+  var listDescription []*ast.StringValue
+  var listType []ast.Type
+  var listDefaultValue []ast.Value
+  var listDirectives []*ast.Directive
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
-		names = append(names, one.Name)
-		descriptions = append(descriptions, one.Description)
-		directives = append(directives, one.Directives...)
+    listName = append(listName, one.Name)
+    listDescription = append(listDescription, one.Description)
+    listType = append(listType, one.Type)
+    listDefaultValue = append(listDefaultValue, one.DefaultValue)
+    listDirectives = append(listDirectives, one.Directives...)
 	}
 
 	// step 4 - prepare output types
@@ -73,20 +73,30 @@ func (m *Merger) OneInputValueDefinition(curr []*ast.InputValueDefinition, more 
 	var errSet error
 
 	// step 5 - merge properties
-	if single, err := m.OneName(names); err != nil {
+  if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Name = single
+		one.Name = merged
 	}
-	if single, err := m.OneStringValue(descriptions); err != nil {
+  if merged, err := m.OneStringValue(listDescription); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Description = single
+		one.Description = merged
 	}
-	if many, err := m.SimilarDirective(directives); err != nil {
+  if merged, err := m.OneType(listType); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Directives = many
+		one.Type = merged
+	}
+  if merged, err := m.OneValue(listDefaultValue); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.DefaultValue = merged
+	}
+  if merged, err := m.SimilarDirective(listDirectives); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Directives = merged
 	}
 
 	return one, errSet

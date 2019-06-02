@@ -53,21 +53,11 @@ func (m *Merger) OneTypeExtensionDefinition(curr []*ast.TypeExtensionDefinition,
 	}
 
 	// step 2 - prepare property collections (if any)
-	var names []*ast.Name
-	var descriptions []*ast.StringValue
-	var directives []*ast.Directive
-	var interfaces []*ast.Named
+  var listDefinition []*ast.ObjectDefinition
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
-		names = append(names, one.Definition.Name)
-		descriptions = append(descriptions, one.Definition.Description)
-		directives = append(directives, one.Definition.Directives...)
-		interfaces = append(interfaces, one.Definition.Interfaces...)
+    listDefinition = append(listDefinition, one.Definition)
 	}
 
 	// step 4 - prepare output types
@@ -75,25 +65,10 @@ func (m *Merger) OneTypeExtensionDefinition(curr []*ast.TypeExtensionDefinition,
 	var errSet error
 
 	// step 5 - merge properties
-	if single, err := m.OneName(names); err != nil {
+  if merged, err := m.OneObjectDefinition(listDefinition); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Definition.Name = single
-	}
-	if single, err := m.OneStringValue(descriptions); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Definition.Description = single
-	}
-	if many, err := m.SimilarDirective(directives); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Definition.Directives = many
-	}
-	if many, err := m.SimilarNamed(interfaces); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Definition.Interfaces = many
+		one.Definition = merged
 	}
 
 	return one, errSet

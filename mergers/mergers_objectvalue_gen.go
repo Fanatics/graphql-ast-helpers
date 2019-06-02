@@ -53,13 +53,11 @@ func (m *Merger) OneObjectValue(curr []*ast.ObjectValue, more ...*ast.ObjectValu
 	}
 
 	// step 2 - prepare property collections (if any)
+  var listFields []*ast.ObjectField
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
+    listFields = append(listFields, one.Fields...)
 	}
 
 	// step 4 - prepare output types
@@ -67,6 +65,11 @@ func (m *Merger) OneObjectValue(curr []*ast.ObjectValue, more ...*ast.ObjectValu
 	var errSet error
 
 	// step 5 - merge properties
+  if merged, err := m.SimilarObjectField(listFields); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Fields = merged
+	}
 
 	return one, errSet
 }

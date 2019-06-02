@@ -53,17 +53,17 @@ func (m *Merger) OneDirectiveDefinition(curr []*ast.DirectiveDefinition, more ..
 	}
 
 	// step 2 - prepare property collections (if any)
-	var names []*ast.Name
-	var descriptions []*ast.StringValue
+  var listName []*ast.Name
+  var listDescription []*ast.StringValue
+  var listArguments []*ast.InputValueDefinition
+  var listLocations []*ast.Name
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
-		names = append(names, one.Name)
-		descriptions = append(descriptions, one.Description)
+    listName = append(listName, one.Name)
+    listDescription = append(listDescription, one.Description)
+    listArguments = append(listArguments, one.Arguments...)
+    listLocations = append(listLocations, one.Locations...)
 	}
 
 	// step 4 - prepare output types
@@ -71,15 +71,25 @@ func (m *Merger) OneDirectiveDefinition(curr []*ast.DirectiveDefinition, more ..
 	var errSet error
 
 	// step 5 - merge properties
-	if single, err := m.OneName(names); err != nil {
+  if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Name = single
+		one.Name = merged
 	}
-	if single, err := m.OneStringValue(descriptions); err != nil {
+  if merged, err := m.OneStringValue(listDescription); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Description = single
+		one.Description = merged
+	}
+  if merged, err := m.SimilarInputValueDefinition(listArguments); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Arguments = merged
+	}
+  if merged, err := m.SimilarName(listLocations); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Locations = merged
 	}
 
 	return one, errSet

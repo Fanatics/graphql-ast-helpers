@@ -53,13 +53,11 @@ func (m *Merger) OneList(curr []*ast.List, more ...*ast.List) (*ast.List, error)
 	}
 
 	// step 2 - prepare property collections (if any)
+  var listType []ast.Type
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
+    listType = append(listType, one.Type)
 	}
 
 	// step 4 - prepare output types
@@ -67,6 +65,11 @@ func (m *Merger) OneList(curr []*ast.List, more ...*ast.List) (*ast.List, error)
 	var errSet error
 
 	// step 5 - merge properties
+  if merged, err := m.OneType(listType); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Type = merged
+	}
 
 	return one, errSet
 }

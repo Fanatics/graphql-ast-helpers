@@ -53,15 +53,13 @@ func (m *Merger) OneDirective(curr []*ast.Directive, more ...*ast.Directive) (*a
 	}
 
 	// step 2 - prepare property collections (if any)
-	var names []*ast.Name
+  var listName []*ast.Name
+  var listArguments []*ast.Argument
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
-		names = append(names, one.Name)
+    listName = append(listName, one.Name)
+    listArguments = append(listArguments, one.Arguments...)
 	}
 
 	// step 4 - prepare output types
@@ -69,10 +67,15 @@ func (m *Merger) OneDirective(curr []*ast.Directive, more ...*ast.Directive) (*a
 	var errSet error
 
 	// step 5 - merge properties
-	if single, err := m.OneName(names); err != nil {
+  if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Name = single
+		one.Name = merged
+	}
+  if merged, err := m.SimilarArgument(listArguments); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Arguments = merged
 	}
 
 	return one, errSet

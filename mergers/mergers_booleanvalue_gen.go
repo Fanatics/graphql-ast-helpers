@@ -53,13 +53,11 @@ func (m *Merger) OneBooleanValue(curr []*ast.BooleanValue, more ...*ast.BooleanV
 	}
 
 	// step 2 - prepare property collections (if any)
+  var listValue []bool
 
 	// step 3 - range over the parent struct and collect properties
 	for _, one := range all {
-		// 3.a - prevent empty loop from making syntax errors
-		_ = one
-
-		// 3.b - accrue properties
+    listValue = append(listValue, one.Value)
 	}
 
 	// step 4 - prepare output types
@@ -67,6 +65,11 @@ func (m *Merger) OneBooleanValue(curr []*ast.BooleanValue, more ...*ast.BooleanV
 	var errSet error
 
 	// step 5 - merge properties
+  if merged, err := m.Onebool(listValue); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Value = merged
+	}
 
 	return one, errSet
 }
