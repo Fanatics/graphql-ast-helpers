@@ -10,69 +10,11 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Fanatics/graphql-ast-helpers/meta"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/richardwilkes/toolbox/errs"
 )
-
-var genKinds = map[string]reflect.Type{
-	// Name
-	kinds.Name: reflect.TypeOf(ast.NewName(nil)),
-
-	// Document
-	// kinds.Document:            reflect.TypeOf(ast.NewDocument(nil)),
-	// kinds.OperationDefinition: reflect.TypeOf(ast.NewOperationDefinition(nil)),
-	// kinds.VariableDefinition:  reflect.TypeOf(ast.NewVariableDefinition(nil)),
-	// kinds.Variable:            reflect.TypeOf(ast.NewVariable(nil)),
-	// kinds.SelectionSet:        reflect.TypeOf(ast.NewSelectionSet(nil)),
-	kinds.Field:    reflect.TypeOf(ast.NewField(nil)),
-	kinds.Argument: reflect.TypeOf(ast.NewArgument(nil)),
-
-	// Fragments
-	// kinds.FragmentSpread:     reflect.TypeOf(ast.NewFragmentSpread(nil)),
-	// kinds.InlineFragment:     reflect.TypeOf(ast.NewInlineFragment(nil)),
-	// kinds.FragmentDefinition: reflect.TypeOf(ast.NewFragmentDefinition(nil)),
-
-	// Values
-	kinds.IntValue:     reflect.TypeOf(ast.NewIntValue(nil)),
-	kinds.FloatValue:   reflect.TypeOf(ast.NewFloatValue(nil)),
-	kinds.StringValue:  reflect.TypeOf(ast.NewStringValue(nil)),
-	kinds.BooleanValue: reflect.TypeOf(ast.NewBooleanValue(nil)),
-	kinds.EnumValue:    reflect.TypeOf(ast.NewEnumValue(nil)),
-	kinds.ObjectValue:  reflect.TypeOf(ast.NewObjectValue(nil)),
-	kinds.ObjectField:  reflect.TypeOf(ast.NewObjectField(nil)),
-	"Value":            reflect.TypeOf(new(ast.Value)).Elem(),
-
-	// Directives
-	kinds.Directive: reflect.TypeOf(ast.NewDirective(nil)),
-
-	// Types
-	kinds.Named:   reflect.TypeOf(ast.NewNamed(nil)),
-	kinds.List:    reflect.TypeOf(ast.NewList(nil)),
-	kinds.NonNull: reflect.TypeOf(ast.NewNonNull(nil)),
-	"Type":        reflect.TypeOf(new(ast.Type)).Elem(),
-
-	// Type System Definitions
-	// kinds.SchemaDefinition:        reflect.TypeOf(ast.NewSchemaDefinition(nil)),
-	// kinds.OperationTypeDefinition: reflect.TypeOf(ast.NewOperationTypeDefinition(nil)),
-
-	// Types Definitions
-	kinds.ScalarDefinition:      reflect.TypeOf(ast.NewScalarDefinition(nil)),
-	kinds.ObjectDefinition:      reflect.TypeOf(ast.NewObjectDefinition(nil)),
-	kinds.FieldDefinition:       reflect.TypeOf(ast.NewFieldDefinition(nil)),
-	kinds.InputValueDefinition:  reflect.TypeOf(ast.NewInputValueDefinition(nil)),
-	kinds.InterfaceDefinition:   reflect.TypeOf(ast.NewInterfaceDefinition(nil)),
-	kinds.UnionDefinition:       reflect.TypeOf(ast.NewUnionDefinition(nil)),
-	kinds.EnumDefinition:        reflect.TypeOf(ast.NewEnumDefinition(nil)),
-	kinds.EnumValueDefinition:   reflect.TypeOf(ast.NewEnumValueDefinition(nil)),
-	kinds.InputObjectDefinition: reflect.TypeOf(ast.NewInputObjectDefinition(nil)),
-
-	// Types Extensions
-	kinds.TypeExtensionDefinition: reflect.TypeOf(ast.NewTypeExtensionDefinition(nil)),
-
-	// Directive Definitions
-	kinds.DirectiveDefinition: reflect.TypeOf(ast.NewDirectiveDefinition(nil)),
-}
 
 var tmpl *template.Template
 
@@ -102,40 +44,6 @@ func main() {
 
 // -------------
 // template functions
-
-type genKind struct {
-	Kind string
-	Type reflect.Type
-}
-
-func (g genKind) IsStructy() bool {
-	t := g.Type
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-
-	return t.Kind() == reflect.Struct 
-}
-
-func (g genKind) eachField(fn func(reflect.StructField)) error {
-	if !g.IsStructy() {
-		return errs.Newf("can't each-field a struct")
-	}
-
-	elem := g.Type.Elem()
-
-	for i := 0; i < elem.NumField(); i++ {
-		field := elem.Field(i)
-		switch field.Name {
-		case "Kind", "Loc":
-			continue
-		default:
-			fn(elem.Field(i))
-		}
-	}
-
-	return nil
-}
 
 func isMulti(sf reflect.StructField) bool {
 	sk := sf.Type.Kind()
@@ -242,8 +150,8 @@ var getType = func(one genKind) string {
 	return one.Type.String()
 }
 
-var accessName = func(varname, src string, one genKind) string {
-	log.Println(one.Type.Name(), one.Type.String())
+var getKey = func(varname string, one genKind) string {
+	if meta.Is
 	switch one.Type.String() {
 	case "ast.Value", "*ast.EnumValue", "*ast.NonNull", "*ast.List", "*ast.ObjectValue", "*ast.FloatValue", "*ast.IntValue", "*ast.StringValue":
 		return fmt.Sprintf("%s := m.getValueID(%s)", varname, src)
@@ -376,8 +284,7 @@ func (m *Merger) Similar{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ([]
 
 	groups := make(map[string][]{{ $type }})
 	for _, one := range all {
-		{{ accessName "name" "one" . }}
-		if name != "" {
+		if key := {{ getKey "one" . }}; name != "" {
 			curr, _ := groups[name]
 			groups[name] = append(curr, one)
 		}
