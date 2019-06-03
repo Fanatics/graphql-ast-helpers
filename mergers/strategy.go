@@ -61,6 +61,31 @@ func (m *Merger) Onestring(curr []string, more ...string) (string, error) {
 	return out, nil
 }
 
+// Onebool merges strings
+func (m *Merger) Onebool(curr []bool, more ...bool) (bool, error) {
+	all := append(curr, more...)
+	if n := len(all); n == 0 {
+		return false, nil
+	} else if n == 1 {
+		return all[0], nil
+	}
+
+	group := make(map[bool]struct{})
+	for _, one := range all {
+		group[one] = struct{}{}
+	}
+
+	if len(group) > 1 {
+		return false, errs.Newf("multiple different bools %#v", group)
+	}
+
+	var out bool
+	for b := range group {
+		out = b
+	}
+	return out, nil
+}
+
 // ---------------------
 // helpers and constants
 

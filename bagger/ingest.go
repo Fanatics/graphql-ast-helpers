@@ -87,58 +87,58 @@ func (b *Bagger) IngestBags(bags ...*Bagger) error {
 
 	// do the merge
 	for _, group := range scalars {
-		if merged, err := mergers.MergeScalars(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneScalarDefinition(group); isErrNil(err) {
 			log.Println(group)
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range enums {
-		if merged, err := mergers.MergeEnums(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneEnumDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range objects {
-		if merged, err := mergers.MergeObjects(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneObjectDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range inputs {
-		if merged, err := mergers.MergeInputObjects(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneInputObjectDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range unions {
-		if merged, err := mergers.MergeUnions(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneUnionDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range interfaces {
-		if merged, err := mergers.MergeInterfaces(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneInterfaceDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range extensions {
-		if merged, err := mergers.MergeExtensions(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneTypeExtensionDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range directives {
-		if merged, err := mergers.MergeDirectivesToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneDirectiveDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range fieldsQuery {
-		if merged, err := mergers.MergeFieldsToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneFieldDefinition(group); isErrNil(err) {
 			isErrNil(next.AddFieldQuery(merged))
 		}
 	}
 	for _, group := range fieldsMutation {
-		if merged, err := mergers.MergeFieldsToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneFieldDefinition(group); isErrNil(err) {
 			isErrNil(next.AddFieldMutation(merged))
 		}
 	}
 	for _, group := range fieldsMutation {
-		if merged, err := mergers.MergeFieldsToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneFieldDefinition(group); isErrNil(err) {
 			isErrNil(next.AddFieldSubscription(merged))
 		}
 	}
