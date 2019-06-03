@@ -11,14 +11,14 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarField merges declarations of Field that share the same Field value.
-func (m *Merger) SimilarField(curr []*ast.Field, more ...*ast.Field) ([]*ast.Field, error) {
+// SimilarFragmentDefinition merges declarations of FragmentDefinition that share the same FragmentDefinition value.
+func (m *Merger) SimilarFragmentDefinition(curr []*ast.FragmentDefinition, more ...*ast.FragmentDefinition) ([]*ast.FragmentDefinition, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.Field)
+	groups := make(map[string][]*ast.FragmentDefinition)
 	for _, one := range all {
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
@@ -26,11 +26,11 @@ func (m *Merger) SimilarField(curr []*ast.Field, more ...*ast.Field) ([]*ast.Fie
 		}
 	}
 
-	var out []*ast.Field
+	var out []*ast.FragmentDefinition
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneField(group); err != nil {
+		if merged, err := m.OneFragmentDefinition(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -40,9 +40,9 @@ func (m *Merger) SimilarField(curr []*ast.Field, more ...*ast.Field) ([]*ast.Fie
 	return out, errSet
 }
 
-// OneField attempts to merge all members of Field into a singe *ast.Field.
+// OneFragmentDefinition attempts to merge all members of FragmentDefinition into a singe *ast.FragmentDefinition.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneField(curr []*ast.Field, more ...*ast.Field) (*ast.Field, error) {
+func (m *Merger) OneFragmentDefinition(curr []*ast.FragmentDefinition, more ...*ast.FragmentDefinition) (*ast.FragmentDefinition, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -51,16 +51,18 @@ func (m *Merger) OneField(curr []*ast.Field, more ...*ast.Field) (*ast.Field, er
 		return all[0], nil
 	}
 	// prepare property collections
-	var listAlias []*ast.Name
+	var listOperation []string
 	var listName []*ast.Name
-	var listArguments []*ast.Argument
+	var listVariableDefinitions []*ast.VariableDefinition
+	var listTypeCondition []*ast.Named
 	var listDirectives []*ast.Directive
 	var listSelectionSet []*ast.SelectionSet
 	// range over the parent struct and collect properties
 	for _, one := range all {
-		listAlias = append(listAlias, one.Alias)
+		listOperation = append(listOperation, one.Operation)
 		listName = append(listName, one.Name)
-		listArguments = append(listArguments, one.Arguments...)
+		listVariableDefinitions = append(listVariableDefinitions, one.VariableDefinitions...)
+		listTypeCondition = append(listTypeCondition, one.TypeCondition)
 		listDirectives = append(listDirectives, one.Directives...)
 		listSelectionSet = append(listSelectionSet, one.SelectionSet)
 	}
@@ -69,21 +71,26 @@ func (m *Merger) OneField(curr []*ast.Field, more ...*ast.Field) (*ast.Field, er
 
 	// merge properties
 
-	one := ast.NewField(nil)
-	if merged, err := m.OneName(listAlias); err != nil {
+	one := ast.NewFragmentDefinition(nil)
+	if merged, err := m.Onestring(listOperation); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Alias = merged
+		one.Operation = merged
 	}
 	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
 	}
-	if merged, err := m.SimilarArgument(listArguments); err != nil {
+	if merged, err := m.SimilarVariableDefinition(listVariableDefinitions); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Arguments = merged
+		one.VariableDefinitions = merged
+	}
+	if merged, err := m.OneNamed(listTypeCondition); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.TypeCondition = merged
 	}
 	if merged, err := m.SimilarDirective(listDirectives); err != nil {
 		errSet = errs.Append(errSet, err)

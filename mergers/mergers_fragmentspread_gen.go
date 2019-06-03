@@ -11,14 +11,14 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarInterfaceDefinition merges declarations of InterfaceDefinition that share the same InterfaceDefinition value.
-func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) ([]*ast.InterfaceDefinition, error) {
+// SimilarFragmentSpread merges declarations of FragmentSpread that share the same FragmentSpread value.
+func (m *Merger) SimilarFragmentSpread(curr []*ast.FragmentSpread, more ...*ast.FragmentSpread) ([]*ast.FragmentSpread, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.InterfaceDefinition)
+	groups := make(map[string][]*ast.FragmentSpread)
 	for _, one := range all {
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
@@ -26,11 +26,11 @@ func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, mor
 		}
 	}
 
-	var out []*ast.InterfaceDefinition
+	var out []*ast.FragmentSpread
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneInterfaceDefinition(group); err != nil {
+		if merged, err := m.OneFragmentSpread(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -40,9 +40,9 @@ func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, mor
 	return out, errSet
 }
 
-// OneInterfaceDefinition attempts to merge all members of InterfaceDefinition into a singe *ast.InterfaceDefinition.
+// OneFragmentSpread attempts to merge all members of FragmentSpread into a singe *ast.FragmentSpread.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) (*ast.InterfaceDefinition, error) {
+func (m *Merger) OneFragmentSpread(curr []*ast.FragmentSpread, more ...*ast.FragmentSpread) (*ast.FragmentSpread, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -52,41 +52,27 @@ func (m *Merger) OneInterfaceDefinition(curr []*ast.InterfaceDefinition, more ..
 	}
 	// prepare property collections
 	var listName []*ast.Name
-	var listDescription []*ast.StringValue
 	var listDirectives []*ast.Directive
-	var listFields []*ast.FieldDefinition
 	// range over the parent struct and collect properties
 	for _, one := range all {
 		listName = append(listName, one.Name)
-		listDescription = append(listDescription, one.Description)
 		listDirectives = append(listDirectives, one.Directives...)
-		listFields = append(listFields, one.Fields...)
 	}
 
 	var errSet error
 
 	// merge properties
 
-	one := ast.NewInterfaceDefinition(nil)
+	one := ast.NewFragmentSpread(nil)
 	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
 	}
-	if merged, err := m.OneStringValue(listDescription); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Description = merged
-	}
 	if merged, err := m.SimilarDirective(listDirectives); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Directives = merged
-	}
-	if merged, err := m.SimilarFieldDefinition(listFields); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Fields = merged
 	}
 
 	return one, errSet

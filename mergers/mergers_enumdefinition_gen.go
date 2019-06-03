@@ -20,10 +20,9 @@ func (m *Merger) SimilarEnumDefinition(curr []*ast.EnumDefinition, more ...*ast.
 
 	groups := make(map[string][]*ast.EnumDefinition)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one.Name))
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,46 +50,45 @@ func (m *Merger) OneEnumDefinition(curr []*ast.EnumDefinition, more ...*ast.Enum
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listName []*ast.Name
-  var listDescription []*ast.StringValue
-  var listDirectives []*ast.Directive
-  var listValues []*ast.EnumValueDefinition
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listName []*ast.Name
+	var listDescription []*ast.StringValue
+	var listDirectives []*ast.Directive
+	var listValues []*ast.EnumValueDefinition
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listName = append(listName, one.Name)
-    listDescription = append(listDescription, one.Description)
-    listDirectives = append(listDirectives, one.Directives...)
-    listValues = append(listValues, one.Values...)
+		listName = append(listName, one.Name)
+		listDescription = append(listDescription, one.Description)
+		listDirectives = append(listDirectives, one.Directives...)
+		listValues = append(listValues, one.Values...)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewEnumDefinition(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.OneName(listName); err != nil {
+	// merge properties
+
+	one := ast.NewEnumDefinition(nil)
+	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
 	}
-  if merged, err := m.OneStringValue(listDescription); err != nil {
+	if merged, err := m.OneStringValue(listDescription); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Description = merged
 	}
-  if merged, err := m.SimilarDirective(listDirectives); err != nil {
+	if merged, err := m.SimilarDirective(listDirectives); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Directives = merged
 	}
-  if merged, err := m.SimilarEnumValueDefinition(listValues); err != nil {
+	if merged, err := m.SimilarEnumValueDefinition(listValues); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Values = merged
 	}
 
 	return one, errSet
+
 }

@@ -11,14 +11,14 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarInterfaceDefinition merges declarations of InterfaceDefinition that share the same InterfaceDefinition value.
-func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) ([]*ast.InterfaceDefinition, error) {
+// SimilarOperationDefinition merges declarations of OperationDefinition that share the same OperationDefinition value.
+func (m *Merger) SimilarOperationDefinition(curr []*ast.OperationDefinition, more ...*ast.OperationDefinition) ([]*ast.OperationDefinition, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.InterfaceDefinition)
+	groups := make(map[string][]*ast.OperationDefinition)
 	for _, one := range all {
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
@@ -26,11 +26,11 @@ func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, mor
 		}
 	}
 
-	var out []*ast.InterfaceDefinition
+	var out []*ast.OperationDefinition
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneInterfaceDefinition(group); err != nil {
+		if merged, err := m.OneOperationDefinition(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -40,9 +40,9 @@ func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, mor
 	return out, errSet
 }
 
-// OneInterfaceDefinition attempts to merge all members of InterfaceDefinition into a singe *ast.InterfaceDefinition.
+// OneOperationDefinition attempts to merge all members of OperationDefinition into a singe *ast.OperationDefinition.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) (*ast.InterfaceDefinition, error) {
+func (m *Merger) OneOperationDefinition(curr []*ast.OperationDefinition, more ...*ast.OperationDefinition) (*ast.OperationDefinition, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -51,42 +51,49 @@ func (m *Merger) OneInterfaceDefinition(curr []*ast.InterfaceDefinition, more ..
 		return all[0], nil
 	}
 	// prepare property collections
+	var listOperation []string
 	var listName []*ast.Name
-	var listDescription []*ast.StringValue
+	var listVariableDefinitions []*ast.VariableDefinition
 	var listDirectives []*ast.Directive
-	var listFields []*ast.FieldDefinition
+	var listSelectionSet []*ast.SelectionSet
 	// range over the parent struct and collect properties
 	for _, one := range all {
+		listOperation = append(listOperation, one.Operation)
 		listName = append(listName, one.Name)
-		listDescription = append(listDescription, one.Description)
+		listVariableDefinitions = append(listVariableDefinitions, one.VariableDefinitions...)
 		listDirectives = append(listDirectives, one.Directives...)
-		listFields = append(listFields, one.Fields...)
+		listSelectionSet = append(listSelectionSet, one.SelectionSet)
 	}
 
 	var errSet error
 
 	// merge properties
 
-	one := ast.NewInterfaceDefinition(nil)
+	one := ast.NewOperationDefinition(nil)
+	if merged, err := m.Onestring(listOperation); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Operation = merged
+	}
 	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
 	}
-	if merged, err := m.OneStringValue(listDescription); err != nil {
+	if merged, err := m.SimilarVariableDefinition(listVariableDefinitions); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Description = merged
+		one.VariableDefinitions = merged
 	}
 	if merged, err := m.SimilarDirective(listDirectives); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Directives = merged
 	}
-	if merged, err := m.SimilarFieldDefinition(listFields); err != nil {
+	if merged, err := m.OneSelectionSet(listSelectionSet); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Fields = merged
+		one.SelectionSet = merged
 	}
 
 	return one, errSet

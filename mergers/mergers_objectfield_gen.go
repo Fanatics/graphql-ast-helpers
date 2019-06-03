@@ -20,10 +20,9 @@ func (m *Merger) SimilarObjectField(curr []*ast.ObjectField, more ...*ast.Object
 
 	groups := make(map[string][]*ast.ObjectField)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one.Name))
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,32 +50,31 @@ func (m *Merger) OneObjectField(curr []*ast.ObjectField, more ...*ast.ObjectFiel
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listName []*ast.Name
-  var listValue []ast.Value
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listName []*ast.Name
+	var listValue []ast.Value
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listName = append(listName, one.Name)
-    listValue = append(listValue, one.Value)
+		listName = append(listName, one.Name)
+		listValue = append(listValue, one.Value)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewObjectField(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.OneName(listName); err != nil {
+	// merge properties
+
+	one := ast.NewObjectField(nil)
+	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
 	}
-  if merged, err := m.OneValue(listValue); err != nil {
+	if merged, err := m.OneValue(listValue); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Value = merged
 	}
 
 	return one, errSet
+
 }

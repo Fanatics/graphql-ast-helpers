@@ -20,10 +20,9 @@ func (m *Merger) SimilarTypeExtensionDefinition(curr []*ast.TypeExtensionDefinit
 
 	groups := make(map[string][]*ast.TypeExtensionDefinition)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one.Definition.Name))
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := fmt.Sprint(printer.Print(one.Definition.Name)); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,25 +50,24 @@ func (m *Merger) OneTypeExtensionDefinition(curr []*ast.TypeExtensionDefinition,
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listDefinition []*ast.ObjectDefinition
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listDefinition []*ast.ObjectDefinition
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listDefinition = append(listDefinition, one.Definition)
+		listDefinition = append(listDefinition, one.Definition)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewTypeExtensionDefinition(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.OneObjectDefinition(listDefinition); err != nil {
+	// merge properties
+
+	one := ast.NewTypeExtensionDefinition(nil)
+	if merged, err := m.OneObjectDefinition(listDefinition); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Definition = merged
 	}
 
 	return one, errSet
+
 }

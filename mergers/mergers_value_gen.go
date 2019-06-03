@@ -20,10 +20,9 @@ func (m *Merger) SimilarValue(curr []ast.Value, more ...ast.Value) ([]ast.Value,
 
 	groups := make(map[string][]ast.Value)
 	for _, one := range all {
-		name := m.getValueID(one)
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := m.getValueID(one); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -52,17 +51,103 @@ func (m *Merger) OneValue(curr []ast.Value, more ...ast.Value) (ast.Value, error
 		return all[0], nil
 	}
 
-	// step 2 - prepare property collections (if any)
-
-
-	// step 3 - range over the parent struct and collect properties
-
-	// step 4 - prepare output types
-	one := ast.NewValue(nil)
 	var errSet error
 
-	// step 5 - merge properties
+	// merge properties
 
+	switch all[0].(type) {
+	case *ast.BooleanValue:
+		var set []*ast.BooleanValue
+		for _, single := range all {
+			v, ok := single.(*ast.BooleanValue)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.BooleanValue but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneBooleanValue(set)
+	case *ast.EnumValue:
+		var set []*ast.EnumValue
+		for _, single := range all {
+			v, ok := single.(*ast.EnumValue)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.EnumValue but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneEnumValue(set)
+	case *ast.FloatValue:
+		var set []*ast.FloatValue
+		for _, single := range all {
+			v, ok := single.(*ast.FloatValue)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.FloatValue but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneFloatValue(set)
+	case *ast.IntValue:
+		var set []*ast.IntValue
+		for _, single := range all {
+			v, ok := single.(*ast.IntValue)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.IntValue but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneIntValue(set)
+	case *ast.ObjectField:
+		var set []*ast.ObjectField
+		for _, single := range all {
+			v, ok := single.(*ast.ObjectField)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.ObjectField but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneObjectField(set)
+	case *ast.ObjectValue:
+		var set []*ast.ObjectValue
+		for _, single := range all {
+			v, ok := single.(*ast.ObjectValue)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.ObjectValue but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneObjectValue(set)
+	case *ast.StringValue:
+		var set []*ast.StringValue
+		for _, single := range all {
+			v, ok := single.(*ast.StringValue)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.StringValue but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneStringValue(set)
+	case *ast.Variable:
+		var set []*ast.Variable
+		for _, single := range all {
+			v, ok := single.(*ast.Variable)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.Variable but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneVariable(set)
+	default:
+		errSet = errs.Append(errSet, errs.Newf("type %T unknown", all[0]))
+	}
 
-	return one, errSet
+	return nil, errSet
+
 }

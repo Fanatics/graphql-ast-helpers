@@ -11,14 +11,14 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarEnumValueDefinition merges declarations of EnumValueDefinition that share the same EnumValueDefinition value.
-func (m *Merger) SimilarEnumValueDefinition(curr []*ast.EnumValueDefinition, more ...*ast.EnumValueDefinition) ([]*ast.EnumValueDefinition, error) {
+// SimilarVariable merges declarations of Variable that share the same Variable value.
+func (m *Merger) SimilarVariable(curr []*ast.Variable, more ...*ast.Variable) ([]*ast.Variable, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.EnumValueDefinition)
+	groups := make(map[string][]*ast.Variable)
 	for _, one := range all {
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
@@ -26,11 +26,11 @@ func (m *Merger) SimilarEnumValueDefinition(curr []*ast.EnumValueDefinition, mor
 		}
 	}
 
-	var out []*ast.EnumValueDefinition
+	var out []*ast.Variable
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneEnumValueDefinition(group); err != nil {
+		if merged, err := m.OneVariable(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -40,9 +40,9 @@ func (m *Merger) SimilarEnumValueDefinition(curr []*ast.EnumValueDefinition, mor
 	return out, errSet
 }
 
-// OneEnumValueDefinition attempts to merge all members of EnumValueDefinition into a singe *ast.EnumValueDefinition.
+// OneVariable attempts to merge all members of Variable into a singe *ast.Variable.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneEnumValueDefinition(curr []*ast.EnumValueDefinition, more ...*ast.EnumValueDefinition) (*ast.EnumValueDefinition, error) {
+func (m *Merger) OneVariable(curr []*ast.Variable, more ...*ast.Variable) (*ast.Variable, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -52,34 +52,20 @@ func (m *Merger) OneEnumValueDefinition(curr []*ast.EnumValueDefinition, more ..
 	}
 	// prepare property collections
 	var listName []*ast.Name
-	var listDescription []*ast.StringValue
-	var listDirectives []*ast.Directive
 	// range over the parent struct and collect properties
 	for _, one := range all {
 		listName = append(listName, one.Name)
-		listDescription = append(listDescription, one.Description)
-		listDirectives = append(listDirectives, one.Directives...)
 	}
 
 	var errSet error
 
 	// merge properties
 
-	one := ast.NewEnumValueDefinition(nil)
+	one := ast.NewVariable(nil)
 	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
-	}
-	if merged, err := m.OneStringValue(listDescription); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Description = merged
-	}
-	if merged, err := m.SimilarDirective(listDirectives); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Directives = merged
 	}
 
 	return one, errSet

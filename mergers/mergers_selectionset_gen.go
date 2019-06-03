@@ -11,14 +11,14 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarFloatValue merges declarations of FloatValue that share the same FloatValue value.
-func (m *Merger) SimilarFloatValue(curr []*ast.FloatValue, more ...*ast.FloatValue) ([]*ast.FloatValue, error) {
+// SimilarSelectionSet merges declarations of SelectionSet that share the same SelectionSet value.
+func (m *Merger) SimilarSelectionSet(curr []*ast.SelectionSet, more ...*ast.SelectionSet) ([]*ast.SelectionSet, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.FloatValue)
+	groups := make(map[string][]*ast.SelectionSet)
 	for _, one := range all {
 		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
@@ -26,11 +26,11 @@ func (m *Merger) SimilarFloatValue(curr []*ast.FloatValue, more ...*ast.FloatVal
 		}
 	}
 
-	var out []*ast.FloatValue
+	var out []*ast.SelectionSet
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneFloatValue(group); err != nil {
+		if merged, err := m.OneSelectionSet(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -40,9 +40,9 @@ func (m *Merger) SimilarFloatValue(curr []*ast.FloatValue, more ...*ast.FloatVal
 	return out, errSet
 }
 
-// OneFloatValue attempts to merge all members of FloatValue into a singe *ast.FloatValue.
+// OneSelectionSet attempts to merge all members of SelectionSet into a singe *ast.SelectionSet.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneFloatValue(curr []*ast.FloatValue, more ...*ast.FloatValue) (*ast.FloatValue, error) {
+func (m *Merger) OneSelectionSet(curr []*ast.SelectionSet, more ...*ast.SelectionSet) (*ast.SelectionSet, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -51,21 +51,21 @@ func (m *Merger) OneFloatValue(curr []*ast.FloatValue, more ...*ast.FloatValue) 
 		return all[0], nil
 	}
 	// prepare property collections
-	var listValue []string
+	var listSelections []ast.Selection
 	// range over the parent struct and collect properties
 	for _, one := range all {
-		listValue = append(listValue, one.Value)
+		listSelections = append(listSelections, one.Selections...)
 	}
 
 	var errSet error
 
 	// merge properties
 
-	one := ast.NewFloatValue(nil)
-	if merged, err := m.Onestring(listValue); err != nil {
+	one := ast.NewSelectionSet(nil)
+	if merged, err := m.SimilarSelection(listSelections); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Value = merged
+		one.Selections = merged
 	}
 
 	return one, errSet

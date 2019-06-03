@@ -11,26 +11,26 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarUnionDefinition merges declarations of UnionDefinition that share the same UnionDefinition value.
-func (m *Merger) SimilarUnionDefinition(curr []*ast.UnionDefinition, more ...*ast.UnionDefinition) ([]*ast.UnionDefinition, error) {
+// SimilarSchemaDefinition merges declarations of SchemaDefinition that share the same SchemaDefinition value.
+func (m *Merger) SimilarSchemaDefinition(curr []*ast.SchemaDefinition, more ...*ast.SchemaDefinition) ([]*ast.SchemaDefinition, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.UnionDefinition)
+	groups := make(map[string][]*ast.SchemaDefinition)
 	for _, one := range all {
-		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
+		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)
 		}
 	}
 
-	var out []*ast.UnionDefinition
+	var out []*ast.SchemaDefinition
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneUnionDefinition(group); err != nil {
+		if merged, err := m.OneSchemaDefinition(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -40,9 +40,9 @@ func (m *Merger) SimilarUnionDefinition(curr []*ast.UnionDefinition, more ...*as
 	return out, errSet
 }
 
-// OneUnionDefinition attempts to merge all members of UnionDefinition into a singe *ast.UnionDefinition.
+// OneSchemaDefinition attempts to merge all members of SchemaDefinition into a singe *ast.SchemaDefinition.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneUnionDefinition(curr []*ast.UnionDefinition, more ...*ast.UnionDefinition) (*ast.UnionDefinition, error) {
+func (m *Merger) OneSchemaDefinition(curr []*ast.SchemaDefinition, more ...*ast.SchemaDefinition) (*ast.SchemaDefinition, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -51,42 +51,28 @@ func (m *Merger) OneUnionDefinition(curr []*ast.UnionDefinition, more ...*ast.Un
 		return all[0], nil
 	}
 	// prepare property collections
-	var listName []*ast.Name
-	var listDescription []*ast.StringValue
 	var listDirectives []*ast.Directive
-	var listTypes []*ast.Named
+	var listOperationTypes []*ast.OperationTypeDefinition
 	// range over the parent struct and collect properties
 	for _, one := range all {
-		listName = append(listName, one.Name)
-		listDescription = append(listDescription, one.Description)
 		listDirectives = append(listDirectives, one.Directives...)
-		listTypes = append(listTypes, one.Types...)
+		listOperationTypes = append(listOperationTypes, one.OperationTypes...)
 	}
 
 	var errSet error
 
 	// merge properties
 
-	one := ast.NewUnionDefinition(nil)
-	if merged, err := m.OneName(listName); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Name = merged
-	}
-	if merged, err := m.OneStringValue(listDescription); err != nil {
-		errSet = errs.Append(errSet, err)
-	} else {
-		one.Description = merged
-	}
+	one := ast.NewSchemaDefinition(nil)
 	if merged, err := m.SimilarDirective(listDirectives); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Directives = merged
 	}
-	if merged, err := m.SimilarNamed(listTypes); err != nil {
+	if merged, err := m.SimilarOperationTypeDefinition(listOperationTypes); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
-		one.Types = merged
+		one.OperationTypes = merged
 	}
 
 	return one, errSet

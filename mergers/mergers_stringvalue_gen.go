@@ -20,10 +20,9 @@ func (m *Merger) SimilarStringValue(curr []*ast.StringValue, more ...*ast.String
 
 	groups := make(map[string][]*ast.StringValue)
 	for _, one := range all {
-		name := m.getValueID(one)
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := m.getNodeID(one); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,25 +50,24 @@ func (m *Merger) OneStringValue(curr []*ast.StringValue, more ...*ast.StringValu
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listValue []string
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listValue []string
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listValue = append(listValue, one.Value)
+		listValue = append(listValue, one.Value)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewStringValue(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.Onestring(listValue); err != nil {
+	// merge properties
+
+	one := ast.NewStringValue(nil)
+	if merged, err := m.Onestring(listValue); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Value = merged
 	}
 
 	return one, errSet
+
 }

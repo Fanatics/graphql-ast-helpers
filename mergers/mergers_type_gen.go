@@ -20,10 +20,9 @@ func (m *Merger) SimilarType(curr []ast.Type, more ...ast.Type) ([]ast.Type, err
 
 	groups := make(map[string][]ast.Type)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one))
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := fmt.Sprint(printer.Print(one)); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -52,17 +51,48 @@ func (m *Merger) OneType(curr []ast.Type, more ...ast.Type) (ast.Type, error) {
 		return all[0], nil
 	}
 
-	// step 2 - prepare property collections (if any)
-
-
-	// step 3 - range over the parent struct and collect properties
-
-	// step 4 - prepare output types
-	one := ast.NewType(nil)
 	var errSet error
 
-	// step 5 - merge properties
+	// merge properties
 
+	switch all[0].(type) {
+	case *ast.List:
+		var set []*ast.List
+		for _, single := range all {
+			v, ok := single.(*ast.List)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.List but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneList(set)
+	case *ast.Named:
+		var set []*ast.Named
+		for _, single := range all {
+			v, ok := single.(*ast.Named)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.Named but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneNamed(set)
+	case *ast.NonNull:
+		var set []*ast.NonNull
+		for _, single := range all {
+			v, ok := single.(*ast.NonNull)
+			if !ok {
+				errSet = errs.Append(errSet, errs.Newf("want *ast.NonNull but got type %T", single))
+				continue
+			}
+			set = append(set, v)
+		}
+		return m.OneNonNull(set)
+	default:
+		errSet = errs.Append(errSet, errs.Newf("type %T unknown", all[0]))
+	}
 
-	return one, errSet
+	return nil, errSet
+
 }

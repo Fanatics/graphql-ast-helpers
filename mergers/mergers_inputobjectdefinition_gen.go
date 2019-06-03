@@ -20,10 +20,9 @@ func (m *Merger) SimilarInputObjectDefinition(curr []*ast.InputObjectDefinition,
 
 	groups := make(map[string][]*ast.InputObjectDefinition)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one.Name))
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,46 +50,45 @@ func (m *Merger) OneInputObjectDefinition(curr []*ast.InputObjectDefinition, mor
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listName []*ast.Name
-  var listDescription []*ast.StringValue
-  var listDirectives []*ast.Directive
-  var listFields []*ast.InputValueDefinition
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listName []*ast.Name
+	var listDescription []*ast.StringValue
+	var listDirectives []*ast.Directive
+	var listFields []*ast.InputValueDefinition
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listName = append(listName, one.Name)
-    listDescription = append(listDescription, one.Description)
-    listDirectives = append(listDirectives, one.Directives...)
-    listFields = append(listFields, one.Fields...)
+		listName = append(listName, one.Name)
+		listDescription = append(listDescription, one.Description)
+		listDirectives = append(listDirectives, one.Directives...)
+		listFields = append(listFields, one.Fields...)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewInputObjectDefinition(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.OneName(listName); err != nil {
+	// merge properties
+
+	one := ast.NewInputObjectDefinition(nil)
+	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
 	}
-  if merged, err := m.OneStringValue(listDescription); err != nil {
+	if merged, err := m.OneStringValue(listDescription); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Description = merged
 	}
-  if merged, err := m.SimilarDirective(listDirectives); err != nil {
+	if merged, err := m.SimilarDirective(listDirectives); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Directives = merged
 	}
-  if merged, err := m.SimilarInputValueDefinition(listFields); err != nil {
+	if merged, err := m.SimilarInputValueDefinition(listFields); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Fields = merged
 	}
 
 	return one, errSet
+
 }

@@ -20,10 +20,9 @@ func (m *Merger) SimilarList(curr []*ast.List, more ...*ast.List) ([]*ast.List, 
 
 	groups := make(map[string][]*ast.List)
 	for _, one := range all {
-		name := m.getValueID(one)
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := m.getNodeID(one); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,25 +50,24 @@ func (m *Merger) OneList(curr []*ast.List, more ...*ast.List) (*ast.List, error)
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listType []ast.Type
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listType []ast.Type
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listType = append(listType, one.Type)
+		listType = append(listType, one.Type)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewList(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.OneType(listType); err != nil {
+	// merge properties
+
+	one := ast.NewList(nil)
+	if merged, err := m.OneType(listType); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Type = merged
 	}
 
 	return one, errSet
+
 }

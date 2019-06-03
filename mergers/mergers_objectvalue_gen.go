@@ -20,10 +20,9 @@ func (m *Merger) SimilarObjectValue(curr []*ast.ObjectValue, more ...*ast.Object
 
 	groups := make(map[string][]*ast.ObjectValue)
 	for _, one := range all {
-		name := m.getValueID(one)
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := m.getNodeID(one); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,25 +50,24 @@ func (m *Merger) OneObjectValue(curr []*ast.ObjectValue, more ...*ast.ObjectValu
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listFields []*ast.ObjectField
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listFields []*ast.ObjectField
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listFields = append(listFields, one.Fields...)
+		listFields = append(listFields, one.Fields...)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewObjectValue(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.SimilarObjectField(listFields); err != nil {
+	// merge properties
+
+	one := ast.NewObjectValue(nil)
+	if merged, err := m.SimilarObjectField(listFields); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Fields = merged
 	}
 
 	return one, errSet
+
 }

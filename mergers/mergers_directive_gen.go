@@ -20,10 +20,9 @@ func (m *Merger) SimilarDirective(curr []*ast.Directive, more ...*ast.Directive)
 
 	groups := make(map[string][]*ast.Directive)
 	for _, one := range all {
-		name := fmt.Sprint(printer.Print(one.Name))
-		if name != "" {
-			curr, _ := groups[name]
-			groups[name] = append(curr, one)
+		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
 		}
 	}
 
@@ -51,32 +50,31 @@ func (m *Merger) OneDirective(curr []*ast.Directive, more ...*ast.Directive) (*a
 	} else if n == 1 {
 		return all[0], nil
 	}
-
-	// step 2 - prepare property collections (if any)
-  var listName []*ast.Name
-  var listArguments []*ast.Argument
-
-	// step 3 - range over the parent struct and collect properties
+	// prepare property collections
+	var listName []*ast.Name
+	var listArguments []*ast.Argument
+	// range over the parent struct and collect properties
 	for _, one := range all {
-    listName = append(listName, one.Name)
-    listArguments = append(listArguments, one.Arguments...)
+		listName = append(listName, one.Name)
+		listArguments = append(listArguments, one.Arguments...)
 	}
 
-	// step 4 - prepare output types
-	one := ast.NewDirective(nil)
 	var errSet error
 
-	// step 5 - merge properties
-  if merged, err := m.OneName(listName); err != nil {
+	// merge properties
+
+	one := ast.NewDirective(nil)
+	if merged, err := m.OneName(listName); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Name = merged
 	}
-  if merged, err := m.SimilarArgument(listArguments); err != nil {
+	if merged, err := m.SimilarArgument(listArguments); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Arguments = merged
 	}
 
 	return one, errSet
+
 }

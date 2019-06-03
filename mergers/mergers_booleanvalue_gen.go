@@ -20,4 +20,54 @@ func (m *Merger) SimilarBooleanValue(curr []*ast.BooleanValue, more ...*ast.Bool
 
 	groups := make(map[string][]*ast.BooleanValue)
 	for _, one := range all {
-		
+		if key := m.getNodeID(one); key != "" {
+			curr, _ := groups[key]
+			groups[key] = append(curr, one)
+		}
+	}
+
+	var out []*ast.BooleanValue
+	var errSet error
+
+	for _, group := range groups {
+		if merged, err := m.OneBooleanValue(group); err != nil {
+			errSet = errs.Append(errSet, err)
+		} else if merged != nil {
+			out = append(out, merged)
+		}
+	}
+
+	return out, errSet
+}
+
+// OneBooleanValue attempts to merge all members of BooleanValue into a singe *ast.BooleanValue.
+// If this cannot be done, this method will return an error.
+func (m *Merger) OneBooleanValue(curr []*ast.BooleanValue, more ...*ast.BooleanValue) (*ast.BooleanValue, error) {
+	// step 1 - escape hatch when no calculation is needed
+	all := append(curr, more...)
+	if n := len(all); n == 0 {
+		return nil, nil
+	} else if n == 1 {
+		return all[0], nil
+	}
+	// prepare property collections
+	var listValue []bool
+	// range over the parent struct and collect properties
+	for _, one := range all {
+		listValue = append(listValue, one.Value)
+	}
+
+	var errSet error
+
+	// merge properties
+
+	one := ast.NewBooleanValue(nil)
+	if merged, err := m.Onebool(listValue); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Value = merged
+	}
+
+	return one, errSet
+
+}

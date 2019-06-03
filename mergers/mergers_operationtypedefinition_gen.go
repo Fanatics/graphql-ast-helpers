@@ -11,14 +11,14 @@ import (
 var _ = fmt.Sprint
 var _ = printer.Print
 
-// SimilarNonNull merges declarations of NonNull that share the same NonNull value.
-func (m *Merger) SimilarNonNull(curr []*ast.NonNull, more ...*ast.NonNull) ([]*ast.NonNull, error) {
+// SimilarOperationTypeDefinition merges declarations of OperationTypeDefinition that share the same OperationTypeDefinition value.
+func (m *Merger) SimilarOperationTypeDefinition(curr []*ast.OperationTypeDefinition, more ...*ast.OperationTypeDefinition) ([]*ast.OperationTypeDefinition, error) {
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
 	}
 
-	groups := make(map[string][]*ast.NonNull)
+	groups := make(map[string][]*ast.OperationTypeDefinition)
 	for _, one := range all {
 		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
@@ -26,11 +26,11 @@ func (m *Merger) SimilarNonNull(curr []*ast.NonNull, more ...*ast.NonNull) ([]*a
 		}
 	}
 
-	var out []*ast.NonNull
+	var out []*ast.OperationTypeDefinition
 	var errSet error
 
 	for _, group := range groups {
-		if merged, err := m.OneNonNull(group); err != nil {
+		if merged, err := m.OneOperationTypeDefinition(group); err != nil {
 			errSet = errs.Append(errSet, err)
 		} else if merged != nil {
 			out = append(out, merged)
@@ -40,9 +40,9 @@ func (m *Merger) SimilarNonNull(curr []*ast.NonNull, more ...*ast.NonNull) ([]*a
 	return out, errSet
 }
 
-// OneNonNull attempts to merge all members of NonNull into a singe *ast.NonNull.
+// OneOperationTypeDefinition attempts to merge all members of OperationTypeDefinition into a singe *ast.OperationTypeDefinition.
 // If this cannot be done, this method will return an error.
-func (m *Merger) OneNonNull(curr []*ast.NonNull, more ...*ast.NonNull) (*ast.NonNull, error) {
+func (m *Merger) OneOperationTypeDefinition(curr []*ast.OperationTypeDefinition, more ...*ast.OperationTypeDefinition) (*ast.OperationTypeDefinition, error) {
 	// step 1 - escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
@@ -51,9 +51,11 @@ func (m *Merger) OneNonNull(curr []*ast.NonNull, more ...*ast.NonNull) (*ast.Non
 		return all[0], nil
 	}
 	// prepare property collections
-	var listType []ast.Type
+	var listOperation []string
+	var listType []*ast.Named
 	// range over the parent struct and collect properties
 	for _, one := range all {
+		listOperation = append(listOperation, one.Operation)
 		listType = append(listType, one.Type)
 	}
 
@@ -61,8 +63,13 @@ func (m *Merger) OneNonNull(curr []*ast.NonNull, more ...*ast.NonNull) (*ast.Non
 
 	// merge properties
 
-	one := ast.NewNonNull(nil)
-	if merged, err := m.OneType(listType); err != nil {
+	one := ast.NewOperationTypeDefinition(nil)
+	if merged, err := m.Onestring(listOperation); err != nil {
+		errSet = errs.Append(errSet, err)
+	} else {
+		one.Operation = merged
+	}
+	if merged, err := m.OneNamed(listType); err != nil {
 		errSet = errs.Append(errSet, err)
 	} else {
 		one.Type = merged
