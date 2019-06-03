@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarDirectiveDefinition merges declarations of DirectiveDefinition that share the same DirectiveDefinition value.
+// This uses the default basic merge strategy.
+func SimilarDirectiveDefinition(curr []*ast.DirectiveDefinition, more ...*ast.DirectiveDefinition) ([]*ast.DirectiveDefinition, error) {
+	return Basic.SimilarDirectiveDefinition(curr, more...)
+}
+
+// OneDirectiveDefinition attempts to merge all members of DirectiveDefinition into a singe *ast.DirectiveDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneDirectiveDefinition(curr []*ast.DirectiveDefinition, more ...*ast.DirectiveDefinition) (*ast.DirectiveDefinition, error) {
+	return Basic.OneDirectiveDefinition(curr, more...)
+}
+
+// SimilarDirectiveDefinition merges declarations of DirectiveDefinition that share the same DirectiveDefinition value.
 func (m *Merger) SimilarDirectiveDefinition(curr []*ast.DirectiveDefinition, more ...*ast.DirectiveDefinition) ([]*ast.DirectiveDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarDirectiveDefinition(curr []*ast.DirectiveDefinition, mor
 // OneDirectiveDefinition attempts to merge all members of DirectiveDefinition into a singe *ast.DirectiveDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneDirectiveDefinition(curr []*ast.DirectiveDefinition, more ...*ast.DirectiveDefinition) (*ast.DirectiveDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

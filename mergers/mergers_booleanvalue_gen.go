@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarBooleanValue merges declarations of BooleanValue that share the same BooleanValue value.
+// This uses the default basic merge strategy.
+func SimilarBooleanValue(curr []*ast.BooleanValue, more ...*ast.BooleanValue) ([]*ast.BooleanValue, error) {
+	return Basic.SimilarBooleanValue(curr, more...)
+}
+
+// OneBooleanValue attempts to merge all members of BooleanValue into a singe *ast.BooleanValue.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneBooleanValue(curr []*ast.BooleanValue, more ...*ast.BooleanValue) (*ast.BooleanValue, error) {
+	return Basic.OneBooleanValue(curr, more...)
+}
+
+// SimilarBooleanValue merges declarations of BooleanValue that share the same BooleanValue value.
 func (m *Merger) SimilarBooleanValue(curr []*ast.BooleanValue, more ...*ast.BooleanValue) ([]*ast.BooleanValue, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarBooleanValue(curr []*ast.BooleanValue, more ...*ast.Bool
 // OneBooleanValue attempts to merge all members of BooleanValue into a singe *ast.BooleanValue.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneBooleanValue(curr []*ast.BooleanValue, more ...*ast.BooleanValue) (*ast.BooleanValue, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

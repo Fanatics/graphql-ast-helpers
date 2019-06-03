@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarObjectValue merges declarations of ObjectValue that share the same ObjectValue value.
+// This uses the default basic merge strategy.
+func SimilarObjectValue(curr []*ast.ObjectValue, more ...*ast.ObjectValue) ([]*ast.ObjectValue, error) {
+	return Basic.SimilarObjectValue(curr, more...)
+}
+
+// OneObjectValue attempts to merge all members of ObjectValue into a singe *ast.ObjectValue.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneObjectValue(curr []*ast.ObjectValue, more ...*ast.ObjectValue) (*ast.ObjectValue, error) {
+	return Basic.OneObjectValue(curr, more...)
+}
+
+// SimilarObjectValue merges declarations of ObjectValue that share the same ObjectValue value.
 func (m *Merger) SimilarObjectValue(curr []*ast.ObjectValue, more ...*ast.ObjectValue) ([]*ast.ObjectValue, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarObjectValue(curr []*ast.ObjectValue, more ...*ast.Object
 // OneObjectValue attempts to merge all members of ObjectValue into a singe *ast.ObjectValue.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneObjectValue(curr []*ast.ObjectValue, more ...*ast.ObjectValue) (*ast.ObjectValue, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

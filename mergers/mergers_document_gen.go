@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarDocument merges declarations of Document that share the same Document value.
+// This uses the default basic merge strategy.
+func SimilarDocument(curr []*ast.Document, more ...*ast.Document) ([]*ast.Document, error) {
+	return Basic.SimilarDocument(curr, more...)
+}
+
+// OneDocument attempts to merge all members of Document into a singe *ast.Document.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneDocument(curr []*ast.Document, more ...*ast.Document) (*ast.Document, error) {
+	return Basic.OneDocument(curr, more...)
+}
+
+// SimilarDocument merges declarations of Document that share the same Document value.
 func (m *Merger) SimilarDocument(curr []*ast.Document, more ...*ast.Document) ([]*ast.Document, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarDocument(curr []*ast.Document, more ...*ast.Document) ([
 // OneDocument attempts to merge all members of Document into a singe *ast.Document.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneDocument(curr []*ast.Document, more ...*ast.Document) (*ast.Document, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

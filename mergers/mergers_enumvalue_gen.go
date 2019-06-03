@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarEnumValue merges declarations of EnumValue that share the same EnumValue value.
+// This uses the default basic merge strategy.
+func SimilarEnumValue(curr []*ast.EnumValue, more ...*ast.EnumValue) ([]*ast.EnumValue, error) {
+	return Basic.SimilarEnumValue(curr, more...)
+}
+
+// OneEnumValue attempts to merge all members of EnumValue into a singe *ast.EnumValue.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneEnumValue(curr []*ast.EnumValue, more ...*ast.EnumValue) (*ast.EnumValue, error) {
+	return Basic.OneEnumValue(curr, more...)
+}
+
+// SimilarEnumValue merges declarations of EnumValue that share the same EnumValue value.
 func (m *Merger) SimilarEnumValue(curr []*ast.EnumValue, more ...*ast.EnumValue) ([]*ast.EnumValue, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarEnumValue(curr []*ast.EnumValue, more ...*ast.EnumValue)
 // OneEnumValue attempts to merge all members of EnumValue into a singe *ast.EnumValue.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneEnumValue(curr []*ast.EnumValue, more ...*ast.EnumValue) (*ast.EnumValue, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

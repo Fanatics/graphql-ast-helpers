@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarArgument merges declarations of Argument that share the same Argument value.
+// This uses the default basic merge strategy.
+func SimilarArgument(curr []*ast.Argument, more ...*ast.Argument) ([]*ast.Argument, error) {
+	return Basic.SimilarArgument(curr, more...)
+}
+
+// OneArgument attempts to merge all members of Argument into a singe *ast.Argument.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneArgument(curr []*ast.Argument, more ...*ast.Argument) (*ast.Argument, error) {
+	return Basic.OneArgument(curr, more...)
+}
+
+// SimilarArgument merges declarations of Argument that share the same Argument value.
 func (m *Merger) SimilarArgument(curr []*ast.Argument, more ...*ast.Argument) ([]*ast.Argument, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarArgument(curr []*ast.Argument, more ...*ast.Argument) ([
 // OneArgument attempts to merge all members of Argument into a singe *ast.Argument.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneArgument(curr []*ast.Argument, more ...*ast.Argument) (*ast.Argument, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

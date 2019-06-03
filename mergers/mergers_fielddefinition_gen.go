@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarFieldDefinition merges declarations of FieldDefinition that share the same FieldDefinition value.
+// This uses the default basic merge strategy.
+func SimilarFieldDefinition(curr []*ast.FieldDefinition, more ...*ast.FieldDefinition) ([]*ast.FieldDefinition, error) {
+	return Basic.SimilarFieldDefinition(curr, more...)
+}
+
+// OneFieldDefinition attempts to merge all members of FieldDefinition into a singe *ast.FieldDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneFieldDefinition(curr []*ast.FieldDefinition, more ...*ast.FieldDefinition) (*ast.FieldDefinition, error) {
+	return Basic.OneFieldDefinition(curr, more...)
+}
+
+// SimilarFieldDefinition merges declarations of FieldDefinition that share the same FieldDefinition value.
 func (m *Merger) SimilarFieldDefinition(curr []*ast.FieldDefinition, more ...*ast.FieldDefinition) ([]*ast.FieldDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarFieldDefinition(curr []*ast.FieldDefinition, more ...*as
 // OneFieldDefinition attempts to merge all members of FieldDefinition into a singe *ast.FieldDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneFieldDefinition(curr []*ast.FieldDefinition, more ...*ast.FieldDefinition) (*ast.FieldDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

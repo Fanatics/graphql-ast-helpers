@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarInlineFragment merges declarations of InlineFragment that share the same InlineFragment value.
+// This uses the default basic merge strategy.
+func SimilarInlineFragment(curr []*ast.InlineFragment, more ...*ast.InlineFragment) ([]*ast.InlineFragment, error) {
+	return Basic.SimilarInlineFragment(curr, more...)
+}
+
+// OneInlineFragment attempts to merge all members of InlineFragment into a singe *ast.InlineFragment.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneInlineFragment(curr []*ast.InlineFragment, more ...*ast.InlineFragment) (*ast.InlineFragment, error) {
+	return Basic.OneInlineFragment(curr, more...)
+}
+
+// SimilarInlineFragment merges declarations of InlineFragment that share the same InlineFragment value.
 func (m *Merger) SimilarInlineFragment(curr []*ast.InlineFragment, more ...*ast.InlineFragment) ([]*ast.InlineFragment, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarInlineFragment(curr []*ast.InlineFragment, more ...*ast.
 // OneInlineFragment attempts to merge all members of InlineFragment into a singe *ast.InlineFragment.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneInlineFragment(curr []*ast.InlineFragment, more ...*ast.InlineFragment) (*ast.InlineFragment, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

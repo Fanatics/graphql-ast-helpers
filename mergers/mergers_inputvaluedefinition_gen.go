@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarInputValueDefinition merges declarations of InputValueDefinition that share the same InputValueDefinition value.
+// This uses the default basic merge strategy.
+func SimilarInputValueDefinition(curr []*ast.InputValueDefinition, more ...*ast.InputValueDefinition) ([]*ast.InputValueDefinition, error) {
+	return Basic.SimilarInputValueDefinition(curr, more...)
+}
+
+// OneInputValueDefinition attempts to merge all members of InputValueDefinition into a singe *ast.InputValueDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneInputValueDefinition(curr []*ast.InputValueDefinition, more ...*ast.InputValueDefinition) (*ast.InputValueDefinition, error) {
+	return Basic.OneInputValueDefinition(curr, more...)
+}
+
+// SimilarInputValueDefinition merges declarations of InputValueDefinition that share the same InputValueDefinition value.
 func (m *Merger) SimilarInputValueDefinition(curr []*ast.InputValueDefinition, more ...*ast.InputValueDefinition) ([]*ast.InputValueDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarInputValueDefinition(curr []*ast.InputValueDefinition, m
 // OneInputValueDefinition attempts to merge all members of InputValueDefinition into a singe *ast.InputValueDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneInputValueDefinition(curr []*ast.InputValueDefinition, more ...*ast.InputValueDefinition) (*ast.InputValueDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

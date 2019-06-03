@@ -73,7 +73,24 @@ var _ = printer.Print
 {{- $type := .Type }}
 
 // Similar{{ .Kind }} merges declarations of {{ .Kind }} that share the same {{ .Kind }} value.
+// This uses the default basic merge strategy.
+func Similar{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ([]{{ $type }}, error) {
+	return Basic.Similar{{ .Kind }}(curr, more...)
+}
+
+// One{{ .Kind }} attempts to merge all members of {{ .Kind }} into a singe {{ $type }}.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func One{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ({{ $type }}, error) {
+	return Basic.One{{ .Kind }}(curr, more...)
+}
+
+// Similar{{ .Kind }} merges declarations of {{ .Kind }} that share the same {{ .Kind }} value.
 func (m *Merger) Similar{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ([]{{ $type }}, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -104,7 +121,11 @@ func (m *Merger) Similar{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ([]
 // One{{ .Kind }} attempts to merge all members of {{ .Kind }} into a singe {{ $type }}.
 // If this cannot be done, this method will return an error.
 func (m *Merger) One{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ({{ $type }}, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

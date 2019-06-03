@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarSelectionSet merges declarations of SelectionSet that share the same SelectionSet value.
+// This uses the default basic merge strategy.
+func SimilarSelectionSet(curr []*ast.SelectionSet, more ...*ast.SelectionSet) ([]*ast.SelectionSet, error) {
+	return Basic.SimilarSelectionSet(curr, more...)
+}
+
+// OneSelectionSet attempts to merge all members of SelectionSet into a singe *ast.SelectionSet.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneSelectionSet(curr []*ast.SelectionSet, more ...*ast.SelectionSet) (*ast.SelectionSet, error) {
+	return Basic.OneSelectionSet(curr, more...)
+}
+
+// SimilarSelectionSet merges declarations of SelectionSet that share the same SelectionSet value.
 func (m *Merger) SimilarSelectionSet(curr []*ast.SelectionSet, more ...*ast.SelectionSet) ([]*ast.SelectionSet, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarSelectionSet(curr []*ast.SelectionSet, more ...*ast.Sele
 // OneSelectionSet attempts to merge all members of SelectionSet into a singe *ast.SelectionSet.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneSelectionSet(curr []*ast.SelectionSet, more ...*ast.SelectionSet) (*ast.SelectionSet, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

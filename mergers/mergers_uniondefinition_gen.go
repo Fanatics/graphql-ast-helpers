@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarUnionDefinition merges declarations of UnionDefinition that share the same UnionDefinition value.
+// This uses the default basic merge strategy.
+func SimilarUnionDefinition(curr []*ast.UnionDefinition, more ...*ast.UnionDefinition) ([]*ast.UnionDefinition, error) {
+	return Basic.SimilarUnionDefinition(curr, more...)
+}
+
+// OneUnionDefinition attempts to merge all members of UnionDefinition into a singe *ast.UnionDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneUnionDefinition(curr []*ast.UnionDefinition, more ...*ast.UnionDefinition) (*ast.UnionDefinition, error) {
+	return Basic.OneUnionDefinition(curr, more...)
+}
+
+// SimilarUnionDefinition merges declarations of UnionDefinition that share the same UnionDefinition value.
 func (m *Merger) SimilarUnionDefinition(curr []*ast.UnionDefinition, more ...*ast.UnionDefinition) ([]*ast.UnionDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarUnionDefinition(curr []*ast.UnionDefinition, more ...*as
 // OneUnionDefinition attempts to merge all members of UnionDefinition into a singe *ast.UnionDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneUnionDefinition(curr []*ast.UnionDefinition, more ...*ast.UnionDefinition) (*ast.UnionDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

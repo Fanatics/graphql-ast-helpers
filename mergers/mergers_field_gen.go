@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarField merges declarations of Field that share the same Field value.
+// This uses the default basic merge strategy.
+func SimilarField(curr []*ast.Field, more ...*ast.Field) ([]*ast.Field, error) {
+	return Basic.SimilarField(curr, more...)
+}
+
+// OneField attempts to merge all members of Field into a singe *ast.Field.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneField(curr []*ast.Field, more ...*ast.Field) (*ast.Field, error) {
+	return Basic.OneField(curr, more...)
+}
+
+// SimilarField merges declarations of Field that share the same Field value.
 func (m *Merger) SimilarField(curr []*ast.Field, more ...*ast.Field) ([]*ast.Field, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarField(curr []*ast.Field, more ...*ast.Field) ([]*ast.Fie
 // OneField attempts to merge all members of Field into a singe *ast.Field.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneField(curr []*ast.Field, more ...*ast.Field) (*ast.Field, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

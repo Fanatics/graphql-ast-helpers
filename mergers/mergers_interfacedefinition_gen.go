@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarInterfaceDefinition merges declarations of InterfaceDefinition that share the same InterfaceDefinition value.
+// This uses the default basic merge strategy.
+func SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) ([]*ast.InterfaceDefinition, error) {
+	return Basic.SimilarInterfaceDefinition(curr, more...)
+}
+
+// OneInterfaceDefinition attempts to merge all members of InterfaceDefinition into a singe *ast.InterfaceDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) (*ast.InterfaceDefinition, error) {
+	return Basic.OneInterfaceDefinition(curr, more...)
+}
+
+// SimilarInterfaceDefinition merges declarations of InterfaceDefinition that share the same InterfaceDefinition value.
 func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) ([]*ast.InterfaceDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarInterfaceDefinition(curr []*ast.InterfaceDefinition, mor
 // OneInterfaceDefinition attempts to merge all members of InterfaceDefinition into a singe *ast.InterfaceDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneInterfaceDefinition(curr []*ast.InterfaceDefinition, more ...*ast.InterfaceDefinition) (*ast.InterfaceDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarTypeExtensionDefinition merges declarations of TypeExtensionDefinition that share the same TypeExtensionDefinition value.
+// This uses the default basic merge strategy.
+func SimilarTypeExtensionDefinition(curr []*ast.TypeExtensionDefinition, more ...*ast.TypeExtensionDefinition) ([]*ast.TypeExtensionDefinition, error) {
+	return Basic.SimilarTypeExtensionDefinition(curr, more...)
+}
+
+// OneTypeExtensionDefinition attempts to merge all members of TypeExtensionDefinition into a singe *ast.TypeExtensionDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneTypeExtensionDefinition(curr []*ast.TypeExtensionDefinition, more ...*ast.TypeExtensionDefinition) (*ast.TypeExtensionDefinition, error) {
+	return Basic.OneTypeExtensionDefinition(curr, more...)
+}
+
+// SimilarTypeExtensionDefinition merges declarations of TypeExtensionDefinition that share the same TypeExtensionDefinition value.
 func (m *Merger) SimilarTypeExtensionDefinition(curr []*ast.TypeExtensionDefinition, more ...*ast.TypeExtensionDefinition) ([]*ast.TypeExtensionDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarTypeExtensionDefinition(curr []*ast.TypeExtensionDefinit
 // OneTypeExtensionDefinition attempts to merge all members of TypeExtensionDefinition into a singe *ast.TypeExtensionDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneTypeExtensionDefinition(curr []*ast.TypeExtensionDefinition, more ...*ast.TypeExtensionDefinition) (*ast.TypeExtensionDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

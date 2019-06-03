@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarType merges declarations of Type that share the same Type value.
+// This uses the default basic merge strategy.
+func SimilarType(curr []ast.Type, more ...ast.Type) ([]ast.Type, error) {
+	return Basic.SimilarType(curr, more...)
+}
+
+// OneType attempts to merge all members of Type into a singe ast.Type.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneType(curr []ast.Type, more ...ast.Type) (ast.Type, error) {
+	return Basic.OneType(curr, more...)
+}
+
+// SimilarType merges declarations of Type that share the same Type value.
 func (m *Merger) SimilarType(curr []ast.Type, more ...ast.Type) ([]ast.Type, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarType(curr []ast.Type, more ...ast.Type) ([]ast.Type, err
 // OneType attempts to merge all members of Type into a singe ast.Type.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneType(curr []ast.Type, more ...ast.Type) (ast.Type, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

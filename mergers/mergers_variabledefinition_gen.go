@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarVariableDefinition merges declarations of VariableDefinition that share the same VariableDefinition value.
+// This uses the default basic merge strategy.
+func SimilarVariableDefinition(curr []*ast.VariableDefinition, more ...*ast.VariableDefinition) ([]*ast.VariableDefinition, error) {
+	return Basic.SimilarVariableDefinition(curr, more...)
+}
+
+// OneVariableDefinition attempts to merge all members of VariableDefinition into a singe *ast.VariableDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneVariableDefinition(curr []*ast.VariableDefinition, more ...*ast.VariableDefinition) (*ast.VariableDefinition, error) {
+	return Basic.OneVariableDefinition(curr, more...)
+}
+
+// SimilarVariableDefinition merges declarations of VariableDefinition that share the same VariableDefinition value.
 func (m *Merger) SimilarVariableDefinition(curr []*ast.VariableDefinition, more ...*ast.VariableDefinition) ([]*ast.VariableDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarVariableDefinition(curr []*ast.VariableDefinition, more 
 // OneVariableDefinition attempts to merge all members of VariableDefinition into a singe *ast.VariableDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneVariableDefinition(curr []*ast.VariableDefinition, more ...*ast.VariableDefinition) (*ast.VariableDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarNamed merges declarations of Named that share the same Named value.
+// This uses the default basic merge strategy.
+func SimilarNamed(curr []*ast.Named, more ...*ast.Named) ([]*ast.Named, error) {
+	return Basic.SimilarNamed(curr, more...)
+}
+
+// OneNamed attempts to merge all members of Named into a singe *ast.Named.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneNamed(curr []*ast.Named, more ...*ast.Named) (*ast.Named, error) {
+	return Basic.OneNamed(curr, more...)
+}
+
+// SimilarNamed merges declarations of Named that share the same Named value.
 func (m *Merger) SimilarNamed(curr []*ast.Named, more ...*ast.Named) ([]*ast.Named, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarNamed(curr []*ast.Named, more ...*ast.Named) ([]*ast.Nam
 // OneNamed attempts to merge all members of Named into a singe *ast.Named.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneNamed(curr []*ast.Named, more ...*ast.Named) (*ast.Named, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

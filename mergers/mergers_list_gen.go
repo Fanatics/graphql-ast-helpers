@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarList merges declarations of List that share the same List value.
+// This uses the default basic merge strategy.
+func SimilarList(curr []*ast.List, more ...*ast.List) ([]*ast.List, error) {
+	return Basic.SimilarList(curr, more...)
+}
+
+// OneList attempts to merge all members of List into a singe *ast.List.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneList(curr []*ast.List, more ...*ast.List) (*ast.List, error) {
+	return Basic.OneList(curr, more...)
+}
+
+// SimilarList merges declarations of List that share the same List value.
 func (m *Merger) SimilarList(curr []*ast.List, more ...*ast.List) ([]*ast.List, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarList(curr []*ast.List, more ...*ast.List) ([]*ast.List, 
 // OneList attempts to merge all members of List into a singe *ast.List.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneList(curr []*ast.List, more ...*ast.List) (*ast.List, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

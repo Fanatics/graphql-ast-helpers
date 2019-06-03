@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarEnumDefinition merges declarations of EnumDefinition that share the same EnumDefinition value.
+// This uses the default basic merge strategy.
+func SimilarEnumDefinition(curr []*ast.EnumDefinition, more ...*ast.EnumDefinition) ([]*ast.EnumDefinition, error) {
+	return Basic.SimilarEnumDefinition(curr, more...)
+}
+
+// OneEnumDefinition attempts to merge all members of EnumDefinition into a singe *ast.EnumDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneEnumDefinition(curr []*ast.EnumDefinition, more ...*ast.EnumDefinition) (*ast.EnumDefinition, error) {
+	return Basic.OneEnumDefinition(curr, more...)
+}
+
+// SimilarEnumDefinition merges declarations of EnumDefinition that share the same EnumDefinition value.
 func (m *Merger) SimilarEnumDefinition(curr []*ast.EnumDefinition, more ...*ast.EnumDefinition) ([]*ast.EnumDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarEnumDefinition(curr []*ast.EnumDefinition, more ...*ast.
 // OneEnumDefinition attempts to merge all members of EnumDefinition into a singe *ast.EnumDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneEnumDefinition(curr []*ast.EnumDefinition, more ...*ast.EnumDefinition) (*ast.EnumDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

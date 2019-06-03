@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarNode merges declarations of Node that share the same Node value.
+// This uses the default basic merge strategy.
+func SimilarNode(curr []ast.Node, more ...ast.Node) ([]ast.Node, error) {
+	return Basic.SimilarNode(curr, more...)
+}
+
+// OneNode attempts to merge all members of Node into a singe ast.Node.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneNode(curr []ast.Node, more ...ast.Node) (ast.Node, error) {
+	return Basic.OneNode(curr, more...)
+}
+
+// SimilarNode merges declarations of Node that share the same Node value.
 func (m *Merger) SimilarNode(curr []ast.Node, more ...ast.Node) ([]ast.Node, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarNode(curr []ast.Node, more ...ast.Node) ([]ast.Node, err
 // OneNode attempts to merge all members of Node into a singe ast.Node.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneNode(curr []ast.Node, more ...ast.Node) (ast.Node, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

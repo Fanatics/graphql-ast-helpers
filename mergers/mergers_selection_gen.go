@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarSelection merges declarations of Selection that share the same Selection value.
+// This uses the default basic merge strategy.
+func SimilarSelection(curr []ast.Selection, more ...ast.Selection) ([]ast.Selection, error) {
+	return Basic.SimilarSelection(curr, more...)
+}
+
+// OneSelection attempts to merge all members of Selection into a singe ast.Selection.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneSelection(curr []ast.Selection, more ...ast.Selection) (ast.Selection, error) {
+	return Basic.OneSelection(curr, more...)
+}
+
+// SimilarSelection merges declarations of Selection that share the same Selection value.
 func (m *Merger) SimilarSelection(curr []ast.Selection, more ...ast.Selection) ([]ast.Selection, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarSelection(curr []ast.Selection, more ...ast.Selection) (
 // OneSelection attempts to merge all members of Selection into a singe ast.Selection.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneSelection(curr []ast.Selection, more ...ast.Selection) (ast.Selection, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarObjectDefinition merges declarations of ObjectDefinition that share the same ObjectDefinition value.
+// This uses the default basic merge strategy.
+func SimilarObjectDefinition(curr []*ast.ObjectDefinition, more ...*ast.ObjectDefinition) ([]*ast.ObjectDefinition, error) {
+	return Basic.SimilarObjectDefinition(curr, more...)
+}
+
+// OneObjectDefinition attempts to merge all members of ObjectDefinition into a singe *ast.ObjectDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneObjectDefinition(curr []*ast.ObjectDefinition, more ...*ast.ObjectDefinition) (*ast.ObjectDefinition, error) {
+	return Basic.OneObjectDefinition(curr, more...)
+}
+
+// SimilarObjectDefinition merges declarations of ObjectDefinition that share the same ObjectDefinition value.
 func (m *Merger) SimilarObjectDefinition(curr []*ast.ObjectDefinition, more ...*ast.ObjectDefinition) ([]*ast.ObjectDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarObjectDefinition(curr []*ast.ObjectDefinition, more ...*
 // OneObjectDefinition attempts to merge all members of ObjectDefinition into a singe *ast.ObjectDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneObjectDefinition(curr []*ast.ObjectDefinition, more ...*ast.ObjectDefinition) (*ast.ObjectDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

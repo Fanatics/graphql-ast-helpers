@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarFloatValue merges declarations of FloatValue that share the same FloatValue value.
+// This uses the default basic merge strategy.
+func SimilarFloatValue(curr []*ast.FloatValue, more ...*ast.FloatValue) ([]*ast.FloatValue, error) {
+	return Basic.SimilarFloatValue(curr, more...)
+}
+
+// OneFloatValue attempts to merge all members of FloatValue into a singe *ast.FloatValue.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneFloatValue(curr []*ast.FloatValue, more ...*ast.FloatValue) (*ast.FloatValue, error) {
+	return Basic.OneFloatValue(curr, more...)
+}
+
+// SimilarFloatValue merges declarations of FloatValue that share the same FloatValue value.
 func (m *Merger) SimilarFloatValue(curr []*ast.FloatValue, more ...*ast.FloatValue) ([]*ast.FloatValue, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarFloatValue(curr []*ast.FloatValue, more ...*ast.FloatVal
 // OneFloatValue attempts to merge all members of FloatValue into a singe *ast.FloatValue.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneFloatValue(curr []*ast.FloatValue, more ...*ast.FloatValue) (*ast.FloatValue, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

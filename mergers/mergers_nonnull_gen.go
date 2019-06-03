@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarNonNull merges declarations of NonNull that share the same NonNull value.
+// This uses the default basic merge strategy.
+func SimilarNonNull(curr []*ast.NonNull, more ...*ast.NonNull) ([]*ast.NonNull, error) {
+	return Basic.SimilarNonNull(curr, more...)
+}
+
+// OneNonNull attempts to merge all members of NonNull into a singe *ast.NonNull.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneNonNull(curr []*ast.NonNull, more ...*ast.NonNull) (*ast.NonNull, error) {
+	return Basic.OneNonNull(curr, more...)
+}
+
+// SimilarNonNull merges declarations of NonNull that share the same NonNull value.
 func (m *Merger) SimilarNonNull(curr []*ast.NonNull, more ...*ast.NonNull) ([]*ast.NonNull, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarNonNull(curr []*ast.NonNull, more ...*ast.NonNull) ([]*a
 // OneNonNull attempts to merge all members of NonNull into a singe *ast.NonNull.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneNonNull(curr []*ast.NonNull, more ...*ast.NonNull) (*ast.NonNull, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

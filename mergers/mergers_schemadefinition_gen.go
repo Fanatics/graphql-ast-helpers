@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarSchemaDefinition merges declarations of SchemaDefinition that share the same SchemaDefinition value.
+// This uses the default basic merge strategy.
+func SimilarSchemaDefinition(curr []*ast.SchemaDefinition, more ...*ast.SchemaDefinition) ([]*ast.SchemaDefinition, error) {
+	return Basic.SimilarSchemaDefinition(curr, more...)
+}
+
+// OneSchemaDefinition attempts to merge all members of SchemaDefinition into a singe *ast.SchemaDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneSchemaDefinition(curr []*ast.SchemaDefinition, more ...*ast.SchemaDefinition) (*ast.SchemaDefinition, error) {
+	return Basic.OneSchemaDefinition(curr, more...)
+}
+
+// SimilarSchemaDefinition merges declarations of SchemaDefinition that share the same SchemaDefinition value.
 func (m *Merger) SimilarSchemaDefinition(curr []*ast.SchemaDefinition, more ...*ast.SchemaDefinition) ([]*ast.SchemaDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarSchemaDefinition(curr []*ast.SchemaDefinition, more ...*
 // OneSchemaDefinition attempts to merge all members of SchemaDefinition into a singe *ast.SchemaDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneSchemaDefinition(curr []*ast.SchemaDefinition, more ...*ast.SchemaDefinition) (*ast.SchemaDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil

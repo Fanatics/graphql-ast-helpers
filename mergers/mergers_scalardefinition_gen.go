@@ -12,7 +12,24 @@ var _ = fmt.Sprint
 var _ = printer.Print
 
 // SimilarScalarDefinition merges declarations of ScalarDefinition that share the same ScalarDefinition value.
+// This uses the default basic merge strategy.
+func SimilarScalarDefinition(curr []*ast.ScalarDefinition, more ...*ast.ScalarDefinition) ([]*ast.ScalarDefinition, error) {
+	return Basic.SimilarScalarDefinition(curr, more...)
+}
+
+// OneScalarDefinition attempts to merge all members of ScalarDefinition into a singe *ast.ScalarDefinition.
+// If this cannot be done, this method will return an error.
+// This uses the default basic merge strategy.
+func OneScalarDefinition(curr []*ast.ScalarDefinition, more ...*ast.ScalarDefinition) (*ast.ScalarDefinition, error) {
+	return Basic.OneScalarDefinition(curr, more...)
+}
+
+// SimilarScalarDefinition merges declarations of ScalarDefinition that share the same ScalarDefinition value.
 func (m *Merger) SimilarScalarDefinition(curr []*ast.ScalarDefinition, more ...*ast.ScalarDefinition) ([]*ast.ScalarDefinition, error) {
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
 	all := append(curr, more...)
 	if len(all) <= 1 {
 		return all, nil
@@ -43,7 +60,11 @@ func (m *Merger) SimilarScalarDefinition(curr []*ast.ScalarDefinition, more ...*
 // OneScalarDefinition attempts to merge all members of ScalarDefinition into a singe *ast.ScalarDefinition.
 // If this cannot be done, this method will return an error.
 func (m *Merger) OneScalarDefinition(curr []*ast.ScalarDefinition, more ...*ast.ScalarDefinition) (*ast.ScalarDefinition, error) {
-	// step 1 - escape hatch when no calculation is needed
+	if m == nil {
+		return nil, errs.New("merger strategy was nil")
+	}
+
+	// escape hatch when no calculation is needed
 	all := append(curr, more...)
 	if n := len(all); n == 0 {
 		return nil, nil
