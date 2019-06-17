@@ -83,7 +83,7 @@ func SortFields(nodes []*ast.FieldDefinition) {
 // SortFieldsMap will sort a map of fields by name and return a newly created slice.
 func SortFieldsMap(all map[string]*ast.FieldDefinition) []*ast.FieldDefinition {
 	var nodes []*ast.FieldDefinition
-	for _, one := range nodes {
+	for _, one := range all {
 		nodes = append(nodes, one)
 	}
 	SortFields(nodes)
