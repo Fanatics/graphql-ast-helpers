@@ -150,3 +150,88 @@ func (b *Bagger) IngestBags(bags ...*Bagger) error {
 	*b = *next
 	return nil
 }
+
+// IngestDocument ingests the contents of a document
+func (b *Bagger) IngestDocument(doc *ast.Document) error {
+	if b == nil {
+		return nil
+	}
+
+	var bigError error
+	isErrNil := func(err error) bool {
+		if err != nil {
+			bigError = errs.Append(bigError, err)
+			return false
+		}
+		return true
+	}
+
+	// pass 1/3 - find schema operation types names
+	var nameQuery string
+	var nameMutation string
+	var nameSubscription string
+	for _, one := range doc.Definitions {
+		switch node := one.(type) {
+		case *ast.SchemaDefinition:
+			for _, op := range node.OperationTypes {
+				switch op.Operation {
+				case ast.OperationTypeQuery:
+					nameQuery = op.Operation
+				case ast.OperationTypeMutation:
+					nameMutation = op.Operation
+				case ast.OperationTypeSubscription:
+					nameSubscription = op.Operation
+				}
+			}
+			break
+		}
+	}
+
+	// pass 2/3 - find schema operation types, by name
+	var query *ast.ObjectDefinition
+	var mutation *ast.ObjectDefinition
+	var subscription *ast.ObjectDefinition
+	for _, one := range doc.Definitions {
+		switch node := one.(type) {
+		case *ast.ObjectDefinition:
+			switch node.Name.Value {
+			case nameQuery:
+				query = node
+			case nameMutation:
+				mutation = node
+			case nameSubscription:
+				subscription = node
+			}
+		}
+	}
+
+	// pass 3/3 - ingest all nodes, skipping operation type's definitions
+	for _, one := range doc.Definitions {
+		if one == query || one == mutation || one == subscription {
+			continue
+		}
+		if _, isSchema := one.(*ast.SchemaDefinition); isSchema {
+			continue
+		}
+		isErrNil(b.AddNode(one))
+	}
+
+	// last step - ingest all the operation type fields
+	if query != nil {
+		for _, field := range query.Fields {
+			isErrNil(b.AddFieldQuery(field))
+		}
+	}
+	if mutation != nil {
+		for _, field := range mutation.Fields {
+			isErrNil(b.AddFieldQuery(field))
+		}
+	}
+	if subscription != nil {
+		for _, field := range subscription.Fields {
+			isErrNil(b.AddFieldQuery(field))
+		}
+	}
+
+	return bigError
+}

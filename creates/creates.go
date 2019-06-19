@@ -60,6 +60,9 @@ func Type(raw string) ast.Type {
 
 // AsNonNull ...
 func AsNonNull(kind ast.Type) *ast.NonNull {
+	if node, isAlready := kind.(*ast.NonNull); isAlready {
+		return node
+	}
 	return ast.NewNonNull(&ast.NonNull{
 		Type: kind,
 	})

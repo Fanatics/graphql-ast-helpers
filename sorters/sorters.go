@@ -348,4 +348,20 @@ func SortArguments(nodes []*ast.Argument) {
 			nodes[j].Name.Value,
 		})
 	})
+	for _, one := range nodes {
+		SortValue(one.Value)
+	}
+}
+
+// SortValue sorts a value
+func SortValue(raw ast.Value) {
+	switch value := raw.(type) {
+	case *ast.ObjectValue:
+		sort.Slice(value.Fields, func(i, j int) bool {
+			return sort.StringsAreSorted([]string{
+				value.Fields[i].Name.Value,
+				value.Fields[j].Name.Value,
+			})
+		})
+	}
 }
