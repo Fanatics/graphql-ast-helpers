@@ -37,6 +37,9 @@ func (m *Merger) SimilarInlineFragment(curr []*ast.InlineFragment, more ...*ast.
 
 	groups := make(map[string][]*ast.InlineFragment)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

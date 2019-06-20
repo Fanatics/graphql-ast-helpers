@@ -37,6 +37,9 @@ func (m *Merger) SimilarType(curr []ast.Type, more ...ast.Type) ([]ast.Type, err
 
 	groups := make(map[string][]ast.Type)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

@@ -37,6 +37,9 @@ func (m *Merger) SimilarIntValue(curr []*ast.IntValue, more ...*ast.IntValue) ([
 
 	groups := make(map[string][]*ast.IntValue)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

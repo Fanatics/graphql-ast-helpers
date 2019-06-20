@@ -37,6 +37,9 @@ func (m *Merger) SimilarList(curr []*ast.List, more ...*ast.List) ([]*ast.List, 
 
 	groups := make(map[string][]*ast.List)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

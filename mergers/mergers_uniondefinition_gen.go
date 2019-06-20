@@ -37,6 +37,9 @@ func (m *Merger) SimilarUnionDefinition(curr []*ast.UnionDefinition, more ...*as
 
 	groups := make(map[string][]*ast.UnionDefinition)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

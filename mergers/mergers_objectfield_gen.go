@@ -37,6 +37,9 @@ func (m *Merger) SimilarObjectField(curr []*ast.ObjectField, more ...*ast.Object
 
 	groups := make(map[string][]*ast.ObjectField)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

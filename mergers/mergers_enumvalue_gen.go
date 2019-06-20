@@ -37,6 +37,9 @@ func (m *Merger) SimilarEnumValue(curr []*ast.EnumValue, more ...*ast.EnumValue)
 
 	groups := make(map[string][]*ast.EnumValue)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

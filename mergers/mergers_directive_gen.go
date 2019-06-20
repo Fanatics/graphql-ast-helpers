@@ -37,6 +37,9 @@ func (m *Merger) SimilarDirective(curr []*ast.Directive, more ...*ast.Directive)
 
 	groups := make(map[string][]*ast.Directive)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

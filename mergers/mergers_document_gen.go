@@ -37,6 +37,9 @@ func (m *Merger) SimilarDocument(curr []*ast.Document, more ...*ast.Document) ([
 
 	groups := make(map[string][]*ast.Document)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := "document"; key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

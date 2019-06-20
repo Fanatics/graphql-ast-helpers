@@ -37,6 +37,9 @@ func (m *Merger) SimilarFragmentSpread(curr []*ast.FragmentSpread, more ...*ast.
 
 	groups := make(map[string][]*ast.FragmentSpread)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

@@ -37,6 +37,9 @@ func (m *Merger) SimilarVariableDefinition(curr []*ast.VariableDefinition, more 
 
 	groups := make(map[string][]*ast.VariableDefinition)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := m.getNodeID(one); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

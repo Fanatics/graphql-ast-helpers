@@ -98,6 +98,9 @@ func (m *Merger) Similar{{ .Kind }}(curr []{{ $type }}, more ...{{ $type }}) ([]
 
 	groups := make(map[string][]{{ $type }})
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := {{ getKey .Kind "one" }}; key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

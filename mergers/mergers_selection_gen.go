@@ -37,6 +37,9 @@ func (m *Merger) SimilarSelection(curr []ast.Selection, more ...ast.Selection) (
 
 	groups := make(map[string][]ast.Selection)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := "selection"; key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

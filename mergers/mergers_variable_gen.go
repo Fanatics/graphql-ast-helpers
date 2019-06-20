@@ -37,6 +37,9 @@ func (m *Merger) SimilarVariable(curr []*ast.Variable, more ...*ast.Variable) ([
 
 	groups := make(map[string][]*ast.Variable)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

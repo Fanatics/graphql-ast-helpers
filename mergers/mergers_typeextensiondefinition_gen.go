@@ -37,6 +37,9 @@ func (m *Merger) SimilarTypeExtensionDefinition(curr []*ast.TypeExtensionDefinit
 
 	groups := make(map[string][]*ast.TypeExtensionDefinition)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one.Definition.Name)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)

@@ -37,6 +37,9 @@ func (m *Merger) SimilarArgument(curr []*ast.Argument, more ...*ast.Argument) ([
 
 	groups := make(map[string][]*ast.Argument)
 	for _, one := range all {
+		if one == nil {
+			continue
+		}
 		if key := fmt.Sprint(printer.Print(one.Name)); key != "" {
 			curr, _ := groups[key]
 			groups[key] = append(curr, one)
