@@ -87,58 +87,58 @@ func (b *Bagger) IngestBags(bags ...*Bagger) error {
 
 	// do the merge
 	for _, group := range scalars {
-		if merged, err := mergers.MergeScalars(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneScalarDefinition(group); isErrNil(err) {
 			log.Println(group)
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range enums {
-		if merged, err := mergers.MergeEnums(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneEnumDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range objects {
-		if merged, err := mergers.MergeObjects(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneObjectDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range inputs {
-		if merged, err := mergers.MergeInputObjects(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneInputObjectDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range unions {
-		if merged, err := mergers.MergeUnions(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneUnionDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range interfaces {
-		if merged, err := mergers.MergeInterfaces(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneInterfaceDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range extensions {
-		if merged, err := mergers.MergeExtensions(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneTypeExtensionDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range directives {
-		if merged, err := mergers.MergeDirectivesToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneDirectiveDefinition(group); isErrNil(err) {
 			isErrNil(next.AddNode(merged))
 		}
 	}
 	for _, group := range fieldsQuery {
-		if merged, err := mergers.MergeFieldsToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneFieldDefinition(group); isErrNil(err) {
 			isErrNil(next.AddFieldQuery(merged))
 		}
 	}
 	for _, group := range fieldsMutation {
-		if merged, err := mergers.MergeFieldsToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneFieldDefinition(group); isErrNil(err) {
 			isErrNil(next.AddFieldMutation(merged))
 		}
 	}
 	for _, group := range fieldsMutation {
-		if merged, err := mergers.MergeFieldsToOne(group); isErrNil(err) {
+		if merged, err := mergers.Basic.OneFieldDefinition(group); isErrNil(err) {
 			isErrNil(next.AddFieldSubscription(merged))
 		}
 	}
@@ -149,4 +149,89 @@ func (b *Bagger) IngestBags(bags ...*Bagger) error {
 
 	*b = *next
 	return nil
+}
+
+// IngestDocument ingests the contents of a document
+func (b *Bagger) IngestDocument(doc *ast.Document) error {
+	if b == nil {
+		return nil
+	}
+
+	var bigError error
+	isErrNil := func(err error) bool {
+		if err != nil {
+			bigError = errs.Append(bigError, err)
+			return false
+		}
+		return true
+	}
+
+	// pass 1/3 - find schema operation types names
+	var nameQuery string
+	var nameMutation string
+	var nameSubscription string
+	for _, one := range doc.Definitions {
+		switch node := one.(type) {
+		case *ast.SchemaDefinition:
+			for _, op := range node.OperationTypes {
+				switch op.Operation {
+				case ast.OperationTypeQuery:
+					nameQuery = op.Operation
+				case ast.OperationTypeMutation:
+					nameMutation = op.Operation
+				case ast.OperationTypeSubscription:
+					nameSubscription = op.Operation
+				}
+			}
+			break
+		}
+	}
+
+	// pass 2/3 - find schema operation types, by name
+	var query *ast.ObjectDefinition
+	var mutation *ast.ObjectDefinition
+	var subscription *ast.ObjectDefinition
+	for _, one := range doc.Definitions {
+		switch node := one.(type) {
+		case *ast.ObjectDefinition:
+			switch node.Name.Value {
+			case nameQuery:
+				query = node
+			case nameMutation:
+				mutation = node
+			case nameSubscription:
+				subscription = node
+			}
+		}
+	}
+
+	// pass 3/3 - ingest all nodes, skipping operation type's definitions
+	for _, one := range doc.Definitions {
+		if one == query || one == mutation || one == subscription {
+			continue
+		}
+		if _, isSchema := one.(*ast.SchemaDefinition); isSchema {
+			continue
+		}
+		isErrNil(b.AddNode(one))
+	}
+
+	// last step - ingest all the operation type fields
+	if query != nil {
+		for _, field := range query.Fields {
+			isErrNil(b.AddFieldQuery(field))
+		}
+	}
+	if mutation != nil {
+		for _, field := range mutation.Fields {
+			isErrNil(b.AddFieldQuery(field))
+		}
+	}
+	if subscription != nil {
+		for _, field := range subscription.Fields {
+			isErrNil(b.AddFieldQuery(field))
+		}
+	}
+
+	return bigError
 }

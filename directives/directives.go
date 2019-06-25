@@ -22,6 +22,10 @@ func GetDirectives(node ast.Node) []*ast.Directive {
 		return one.Definition.Directives
 	case *ast.InterfaceDefinition:
 		return one.Directives
+	case *ast.InputObjectDefinition:
+		return one.Directives
+	case *ast.InputValueDefinition:
+		return one.Directives
 	}
 	return nil
 }
@@ -42,6 +46,10 @@ func SetDirectives(node ast.Node, directives []*ast.Directive) bool {
 	case *ast.TypeExtensionDefinition:
 		one.Definition.Directives = directives
 	case *ast.InterfaceDefinition:
+		one.Directives = directives
+	case *ast.InputObjectDefinition:
+		one.Directives = directives
+	case *ast.InputValueDefinition:
 		one.Directives = directives
 	default:
 		return false
